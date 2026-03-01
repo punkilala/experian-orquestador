@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@//localhost:1521/XEPDB1
+    username: EXPERIAN
+    password: 2064
+    driver-class-name: oracle.jdbc.OracleDriver
+    
+  jpa:
+    show-sql: true
+    properties:
+     hibernate:
+        format_sql: true
+        
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+
+experian:
+  api:
+    integracion:
+        base-url: http://localhost:6001/integracion
+        experian-solicitudes-url: /experian/solicitudes
+    timeoutrequest: 15000
+    timeoutresponse: 15000
