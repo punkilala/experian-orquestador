@@ -7,13 +7,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import bs.experian.orquestador.dto.SolicitudNuevaResponse;
-import bs.experian.orquestador.service.NuevaSolicitudService;
-import bs.experian.orquestador.service.RecepcionEventoService;
+import bs.experian.orquestador.dto.EventoDto;
+import bs.experian.orquestador.dto.integracion.SolicitudNuevaRequest;
+import bs.experian.orquestador.dto.orquestador.SolicitudNuevaResponse;
+import bs.experian.orquestador.service.evento.RecepcionEventoService;
+import bs.experian.orquestador.service.integracion.NuevaSolicitudService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import bs.experian.orquestador.dto.EventoDto;
-import bs.experian.orquestador.dto.SolicitudNuevaRequest;
 
 @RestController
 @RequestMapping("/experian")

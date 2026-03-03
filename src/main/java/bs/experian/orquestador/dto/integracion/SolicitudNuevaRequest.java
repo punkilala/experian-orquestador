@@ -1,4 +1,4 @@
-package bs.experian.orquestador.dto;
+package bs.experian.orquestador.dto.integracion;
 
 
 import bs.experian.orquestador.utils.DomainEnum;

@@ -1,4 +1,4 @@
-package bs.experian.orquestador.dto;
+package bs.experian.orquestador.dto.orquestador;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

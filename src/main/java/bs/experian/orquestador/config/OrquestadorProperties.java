@@ -27,8 +27,9 @@ public class OrquestadorProperties {
     @Setter
     public static class Integracion {
 
-        private String  baseUrl;
+        private String baseUrl;
         private String experianSolicitudesUrl;
+        private String experianDescargaDocumentoUrl;
     }
 
 }

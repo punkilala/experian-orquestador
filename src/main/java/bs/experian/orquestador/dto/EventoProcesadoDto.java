@@ -1,6 +1,7 @@
 package bs.experian.orquestador.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -9,9 +10,25 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class EventoProcesadoDto {
+	private Long idLong;
+	private String queryId;
+	private String eventType;
 	private String estadoExperian;
     private String subestadoExperian;
-    private String documentCode;
-    private String errorEvento;
+    private Documento documento;
+    private boolean procesado;
+    
+    @Getter 
+    @Setter 
+    @AllArgsConstructor 
+    @NoArgsConstructor 
+    @Builder 
+    public static class Documento {
+    	private String documentCode; 
+    	private String pdfDocumentUrl; 
+    	private String jsonDocumentUrl; 
+    }
 }
+

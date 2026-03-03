@@ -3,7 +3,7 @@ package bs.experian.orquestador.validations;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
-import bs.experian.orquestador.dto.SolicitudNuevaRequest;
+import bs.experian.orquestador.dto.integracion.SolicitudNuevaRequest;
 import bs.experian.orquestador.utils.DomainEnum;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

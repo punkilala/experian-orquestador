@@ -145,8 +145,8 @@ public class EventoExperianWorkerRepository  {
 	        evento.getEventType(),
 	        eventoProcesadoDto.getEstadoExperian(),
 	        eventoProcesadoDto.getSubestadoExperian(),
-	        eventoProcesadoDto.getDocumentCode(),
-	        eventoProcesadoDto.getErrorEvento(),
+	        eventoProcesadoDto.getDocumento().getDocumentCode(),
+	        null,
 	        evento.getPayloadJson()
 	    );
 

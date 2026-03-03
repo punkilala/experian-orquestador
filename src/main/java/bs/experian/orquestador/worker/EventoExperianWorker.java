@@ -11,7 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import bs.experian.orquestador.dto.EventoProcesadoDto;
 import bs.experian.orquestador.entity.EventoExperianVivoEntity;
-import bs.experian.orquestador.service.OrquestadorTxService;
+import bs.experian.orquestador.service.aplicacion.OrquestadorTxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,7 +22,7 @@ public class EventoExperianWorker {
 
 	
 	private final OrquestadorTxService txService;
-	private final EventoExperianProcessor eventoExperianProcessor;
+	private final RouterEventosExperian routerEventosExperian;
 
 	
 	@Scheduled(fixedDelayString = "15000")
@@ -43,13 +43,16 @@ public class EventoExperianWorker {
 		
 		try {
 			//procesar evento
-			eventoProcesado = eventoExperianProcessor.procesar(evento);
+			eventoProcesado = routerEventosExperian.procesar(evento);
 			txService.finalizarEvento(evento, eventoProcesado);
 	
     	}catch (IllegalArgumentException | JsonProcessingException | DataIntegrityViolationException e) {
     		System.out.println("FIN Worker IllegalArgumentException Y MAS...");
     		log.error("Worker IllegalArgumentException..", e);
 		    //evento no reintentable pasasr a eventos errores finales
+    		if (null == eventoProcesado) {
+    			eventoProcesado = informarEventoDto(evento);
+    		}
     		evento.setErrorCode("ERROR_FUNCIONAL");
     		evento.setErrorMensaje(e.getMessage());
             txService.eventoConErrorFuncional(evento, eventoProcesado);
@@ -57,11 +60,21 @@ public class EventoExperianWorker {
 			System.out.println("FIN Worker Exception...");
 			log.error("Worker Exception..", e);
 		    // evento reintentable
+			if (null == eventoProcesado) {
+    			eventoProcesado = informarEventoDto(evento);
+    		}
 		    txService.reprogramarEvento(evento.getId(), "ERROR_TECNICO", e.getMessage());
 		}
 		
 		System.out.println("Worker acabo DE PROCESAR...");
 		
+	}
+	private EventoProcesadoDto informarEventoDto (EventoExperianVivoEntity evento) {
+		try {
+			return  routerEventosExperian.informarEventoProcesadoDto(evento);
+		} catch (JsonProcessingException e) {
+			return new EventoProcesadoDto();
+		}
 	}
 }
 

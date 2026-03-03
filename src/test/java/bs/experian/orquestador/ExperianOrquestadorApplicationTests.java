@@ -1,15 +1,10 @@
 package bs.experian.orquestador;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@SpringBootTest(
-	    properties = {
-	        "spring.autoconfigure.exclude=" +
-	        "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration," +
-	        "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
-	    }
-	)
+@ExtendWith(MockitoExtension.class)
 class ExperianOrquestadorApplicationTests {
 
 	@Test

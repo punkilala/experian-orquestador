@@ -1,4 +1,4 @@
-package bs.experian.orquestador.service;
+package bs.experian.orquestador.service.evento;
 
 import java.util.Map;
 
@@ -19,16 +19,15 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class RecepcionEventoServiceImpl  implements RecepcionEventoService{
+public class RecepcionEventoService{
 	
 	private final ObjectMapper objectMapper;
 	private final EventoExperianWorkerRepository eventoExperianRepository;
 	
-	@Override
 	public void recibirEventoExperian(EventoDto request) {
 			String payload = "";
 			try {
-				payload = objectMapper.writeValueAsString(request);
+				payload = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request);
 				//encolar evento recibido
 				eventoExperianRepository.encolarEvento(request, DomainEnum.TiposEventosHistoricos.EXPERIAN.name(), payload);
 			} catch (JsonProcessingException e) {

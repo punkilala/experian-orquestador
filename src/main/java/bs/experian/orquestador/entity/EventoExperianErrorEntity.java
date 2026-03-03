@@ -51,7 +51,8 @@ public class EventoExperianErrorEntity {
 	    @Column(name = "ERROR_CODE", nullable = false, length = 50)
 	    private String errorCode;
 
-	    @Column(name = "ERROR_MENSAJE", length = 500)
+	    @Lob
+	    @Column(name = "ERROR_MENSAJE")
 	    private String errorMensaje;
 
 	    // TIMESTAMP WITH TIME ZONE
