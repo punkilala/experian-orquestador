@@ -2,35 +2,88 @@ package bs.experian.orquestador.service.evento;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import bs.experian.orquestador.dto.EventoDto;
 import bs.experian.orquestador.dto.EventoProcesadoDto;
 import bs.experian.orquestador.entity.EventoExperianErrorEntity;
 import bs.experian.orquestador.entity.EventoExperianVivoEntity;
+import bs.experian.orquestador.exceptions.AgoraException;
 import bs.experian.orquestador.repository.EventoExperianErrorRepository;
 import bs.experian.orquestador.repository.EventoExperianVivoRepository;
 import bs.experian.orquestador.repository.EventoExperianWorkerRepository;
+import bs.experian.orquestador.utils.DomainEnum;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EventoService {
 	
+	private final ObjectMapper objectMapper;
 	private final EventoExperianWorkerRepository eventoExperianWorkerRepository;
 	private final EventoExperianErrorRepository eventoExperianErrorRepository;
 	private final EventoExperianVivoRepository eventoExperianVivoRepository;
+
 	
+	/**
+	 * Recibir un nuevo evento de experian y encolarlo en la tabla de trabajo del worker
+	 * @param request
+	 */
+	public void recibirEventoExperian(EventoDto request) {
+		String payload = "";
+		try {
+			payload = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request);
+			//encolar evento recibido
+			eventoExperianWorkerRepository.encolarEvento(request, DomainEnum.TiposEventosHistoricos.EXPERIAN.name(), payload);
+		} catch (JsonProcessingException e) {
+			log.error("ERR ORQUESTADOR-EXPERIAN - evento mal formado al recibirlo de Experian", e);
+			throw new AgoraException(HttpStatus.BAD_REQUEST.value(), "evento mal formado", 
+					Map.of("campo", "request", "valor", request));
+		} catch  (DataIntegrityViolationException e) {
+			// solicitud no existe
+	    	log.error("ERR ORQUESTADOR-EXPERIAN -  solicitud no encontrada: " + request.getQueryId());
+	        throw new AgoraException(HttpStatus.NOT_FOUND.value(), "solicitud no encontrada o notificacion duplicada", 
+	        		Map.of("campo", "queryId", "mensaje", request.getQueryId()));
+
+		}
+
+    }
+	
+	
+	/**
+	 * Cuando empieza el ciclo de vida del worker reclama de la cola un evento pte de procesar
+	 * @return
+	 */
 	public Optional<EventoExperianVivoEntity> reclamarEvento() {
         return eventoExperianWorkerRepository.reclamarEvento();
     }
-
+	
+	
+	/**
+	 * Un evento en que se interrumpido por error Tecnico (cae bdd etc) se reprograma para ejecutarlo mas tarde
+	 * @param eventoId
+	 * @param error
+	 * @param errorMesg
+	 */
     public void reprogramarEvento(Long eventoId, String error, String errorMesg) {
         eventoExperianWorkerRepository.reprogramarEvento(eventoId, error, errorMesg);
     }
     
-
+    /**
+     * un evento procesado de borra de la cola del worker y se pasa al historico
+     * @param evento
+     * @param dto
+     */
     public void finalizarEventoTecnico(EventoExperianVivoEntity evento,
                                        EventoProcesadoDto dto) {
 
@@ -68,6 +121,10 @@ public class EventoService {
 		
 	}
     
+    /** borrar un evento de la cola de trabajo del worker
+     * 
+     * @param idEvento
+     */
     public void borrarDeVivo(Long idEvento) {
         eventoExperianVivoRepository.deleteById(idEvento);
     }
