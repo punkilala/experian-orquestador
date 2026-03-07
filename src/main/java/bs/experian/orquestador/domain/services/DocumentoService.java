@@ -6,27 +6,44 @@ import java.time.ZoneOffset;
 import org.springframework.stereotype.Service;
 
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
-import bs.experian.orquestador.infrastructure.persistence.solicitud.SolicitudesDocumentosHistEntity;
-import bs.experian.orquestador.infrastructure.persistence.solicitud.SolicitudesDocumentosHistRepository;
+import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudHistEntity;
+import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudHistRepository;
+import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudEntity;
+import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudRespository;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class DocumentoService {
 	
-	private final SolicitudesDocumentosHistRepository solicitudesDocumentosHistRepository;
+	private final DocumentosSolicitudHistRepository documentosHistSolicitudesRepository;
+	private final DocumentosSolicitudRespository documentosSolicitudesRespository;
 	
-	public void registrarExperianKOEnHistorico(EventoProcesadoDto dto) {
+	public void registrarDocEnHistExperianNoObtenido(EventoProcesadoDto dto) {
 
-        SolicitudesDocumentosHistEntity entity =
-                SolicitudesDocumentosHistEntity.builder()
+        DocumentosSolicitudHistEntity entity =
+                DocumentosSolicitudHistEntity.builder()
                         .queryId(dto.getQueryId())
                         .documentCode(dto.getDocumento().getDocumentCode())
                         .estadoDocumento("EXPERIAN_KO")
                         .fechaAlta(OffsetDateTime.now(ZoneOffset.UTC))
                         .build();
 
-        solicitudesDocumentosHistRepository.save(entity);
+        documentosHistSolicitudesRepository.save(entity);
     }
+	
+	public void registrarDocumentoPteDescarga (EventoProcesadoDto dto) {
+		
+		
+		DocumentosSolicitudEntity entity =
+				DocumentosSolicitudEntity.builder()
+					.queryId(dto.getQueryId())
+					.documentCode(dto.getDocumento().getDocumentCode())
+					.estadoDocumento("PTE_DESCARGA")
+					.build();
+		
+		documentosSolicitudesRespository.save(entity);
+					
+	}
 
 }

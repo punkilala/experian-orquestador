@@ -6,15 +6,22 @@ import static bs.experian.orquestador.domain.constants.ExperianConstants.SUBSTAT
 
 import org.springframework.stereotype.Component;
 
+import bs.experian.orquestador.application.OrquestadorTxService;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
 import bs.experian.orquestador.infrastructure.webclient.OrdenDescargaDocumentoService;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Experian comunica que un documento ya esta disponible
+ * Se guarda en la tabla de procesos de documentos
+ * Se envia a integración para que se descarge
+ */
 @Component
 @RequiredArgsConstructor
 public class ProcesadorNewAvailableDocument implements EventoProcesador {
 	
-	private final OrdenDescargaDocumentoService service;
+	private final OrdenDescargaDocumentoService ordenDescargaDocumentoService;
+	private final OrquestadorTxService txService;
 
 	@Override
 	public boolean aplica(EventoProcesadoDto evento) {
@@ -26,8 +33,10 @@ public class ProcesadorNewAvailableDocument implements EventoProcesador {
 
 	@Override
 	public void procesar(EventoProcesadoDto evento) {
-		
-		service.ordenarDescarga(evento);
+		//registrar documento en la tabla DocumentosSolicitdes
+		txService.registrarDocumentoPteDescarga(evento);
+		//enviar documento a integracion
+		ordenDescargaDocumentoService.ordenarDescarga(evento);
 		evento.setProcesado(true);
 	}
 

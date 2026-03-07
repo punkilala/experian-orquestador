@@ -1,6 +1,8 @@
 package bs.experian.orquestador.application.eventos;
 
-import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
+import static bs.experian.orquestador.domain.constants.ExperianConstants.EVENT_STATUS_CHANGED;
+import static bs.experian.orquestador.domain.constants.ExperianConstants.STATUS_SUCCESS;
+import static bs.experian.orquestador.domain.constants.ExperianConstants.SUBSTATUS_ALL_DOCUMENTS_DOWNLOADED;
 
 import org.springframework.stereotype.Component;
 

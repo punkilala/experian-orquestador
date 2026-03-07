@@ -87,11 +87,20 @@ public class OrquestadorTxService {
 	 * @param evento
 	 */
 	@Transactional
-	public void docErrorExperianAHit (EventoProcesadoDto evento) {
+	public void registrarDocEnHistExperianNoObtenido (EventoProcesadoDto evento) {
 		//pasar evento a historico de documentos
-		documentoService.registrarExperianKOEnHistorico(evento);
+		documentoService.registrarDocEnHistExperianNoObtenido(evento);
 		//borrar de tabla de trabajo
 	    eventoService.borrarDeVivo(evento.getIdLong());		
+	}
+	
+	/**
+	 * Se ha recibido un nuevo documento
+	 * 1. Se guarda en la tabla de documentos
+	 * @param evento
+	 */
+	public void registrarDocumentoPteDescarga (EventoProcesadoDto evento) {
+		documentoService.registrarDocumentoPteDescarga(evento);
 	}
 
 }

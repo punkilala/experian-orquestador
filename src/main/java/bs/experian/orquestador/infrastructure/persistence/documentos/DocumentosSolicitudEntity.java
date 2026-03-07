@@ -1,46 +1,46 @@
-package bs.experian.orquestador.infrastructure.persistence.solicitud;
+package bs.experian.orquestador.infrastructure.persistence.documentos;
 
 import java.time.OffsetDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "SOLICITUDES_DOCUMENTOS")
+@Table(name = "DOCUMENTOS_SOLICITUD")
+@IdClass(DocumentosSolicitudPK.class)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SolicitudesDocumentosEntity {
+@Builder
+public class DocumentosSolicitudEntity {
 	@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID_DOCUMENTO")
-    private Long id;
-
-    @Column(name = "QUERY_ID", nullable = false, length = 60)
+    @Column(name = "QUERY_ID", length = 60, nullable = false)
     private String queryId;
 
-    @Column(name = "DOCUMENT_CODE", nullable = false, length = 100)
+    @Id
+    @Column(name = "DOCUMENT_CODE", length = 100, nullable = false)
     private String documentCode;
 
-    @Column(name = "ESTADO_DOCUMENTO", nullable = false, length = 30)
+    @Column(name = "ESTADO_DOCUMENTO", length = 30, nullable = false)
     private String estadoDocumento;
 
     @Lob
     @Column(name = "DOCUMENT_JSON")
     private String documentJson;
 
-    @Column(name = "FECHA_ALTA", nullable = false)
+    @Column(name = "FECHA_ALTA", nullable = false, updatable = false)
     private OffsetDateTime fechaAlta;
 
     @Column(name = "FECHA_ULTIMA_ACT")
@@ -51,6 +51,11 @@ public class SolicitudesDocumentosEntity {
         if (fechaAlta == null) {
             fechaAlta = OffsetDateTime.now();
         }
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        fechaUltimaActualizacion = OffsetDateTime.now();
     }
 
 }

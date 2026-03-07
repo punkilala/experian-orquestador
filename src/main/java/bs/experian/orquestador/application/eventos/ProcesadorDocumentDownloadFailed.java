@@ -10,6 +10,10 @@ import bs.experian.orquestador.application.OrquestadorTxService;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Experian comunica que el documento no se ha podibo obtener
+ * El documento pasa a historico porque no se va a procesar su descarga
+ */
 @Component
 @RequiredArgsConstructor
 public class ProcesadorDocumentDownloadFailed implements EventoProcesador {
@@ -26,7 +30,7 @@ public class ProcesadorDocumentDownloadFailed implements EventoProcesador {
 
 	@Override
 	public void procesar(EventoProcesadoDto evento) {
-		txService.docErrorExperianAHit(evento);
+		txService.registrarDocEnHistExperianNoObtenido(evento);
 		evento.setProcesado(true);
 	}
 
