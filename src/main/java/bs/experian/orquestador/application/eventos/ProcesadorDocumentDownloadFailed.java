@@ -6,7 +6,7 @@ import static bs.experian.orquestador.domain.constants.ExperianConstants.SUBSTAT
 
 import org.springframework.stereotype.Component;
 
-import bs.experian.orquestador.application.OrquestadorTxService;
+import bs.experian.orquestador.application.DocumentosApplicagtionService;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
 import lombok.RequiredArgsConstructor;
 
@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProcesadorDocumentDownloadFailed implements EventoProcesador {
 	
-	private final OrquestadorTxService txService;
+	private final DocumentosApplicagtionService documentosApplicagtionService;
 
 	@Override
 	public boolean aplica(EventoProcesadoDto evento) {
@@ -30,7 +30,7 @@ public class ProcesadorDocumentDownloadFailed implements EventoProcesador {
 
 	@Override
 	public void procesar(EventoProcesadoDto evento) {
-		txService.registrarDocEnHistExperianNoObtenido(evento);
+		documentosApplicagtionService.registrarDocEnHistExperianNoObtenido(evento);
 		evento.setProcesado(true);
 	}
 

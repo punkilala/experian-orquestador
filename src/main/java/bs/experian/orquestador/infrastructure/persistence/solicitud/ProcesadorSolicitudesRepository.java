@@ -1,33 +1,36 @@
-package bs.experian.orquestador.domain.services;
+package bs.experian.orquestador.infrastructure.persistence.solicitud;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Repository;
 
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
 import bs.experian.orquestador.domain.enums.DomainEnum;
 import bs.experian.orquestador.domain.enums.DomainEnum.EstadoInterno;
 import bs.experian.orquestador.infrastructure.dto.integracion.SolicitudNuevaRequest;
 import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudNuevaResponse;
-import bs.experian.orquestador.infrastructure.persistence.solicitud.SolicitudEntity;
-import bs.experian.orquestador.infrastructure.persistence.solicitud.SolicitudRepository;
 import lombok.RequiredArgsConstructor;
 
-@Service
+@Repository
 @RequiredArgsConstructor
-public class SolicitudService {
+public class ProcesadorSolicitudesRepository {
+	
 	private final SolicitudRepository solicitudRepository;
 	
-	 @Transactional
-    public void crearSolicitud(SolicitudNuevaRequest request, SolicitudNuevaResponse response) {
+	/**
+	 * crear nueva solicitud a experian
+	 * @param request
+	 * @param response
+	 */
+	public void guardarSolicitud(SolicitudNuevaRequest request, SolicitudNuevaResponse response) {
 
         SolicitudEntity entity = new SolicitudEntity();
         entity.setQueryId(response.getQueryId());
         entity.setRequestReference(response.getRequestReference());
 
-        entity.setFechaCreacion(LocalDateTime.now(ZoneOffset.UTC));
+        entity.setFechaCreacion(OffsetDateTime.now());
 
         entity.setEstadoExperian(response.getStatus());
         entity.setSubEstadoExperian(response.getSubstatus());
@@ -45,9 +48,14 @@ public class SolicitudService {
 
         solicitudRepository.save(entity);
 	 }
-	 
-	 public void actualizarDesdeEvento(String queryId, EventoProcesadoDto dto) {
-
+	
+	/**
+	 * Actualizar la solicitud al procesar un evento
+	 * @param queryId
+	 * @param dto
+	 */
+	public void actualizarEstadoSolicitud(String queryId, EventoProcesadoDto dto) {
+		
 		SolicitudEntity solicitudEntity = solicitudRepository.findById(queryId)
 				.orElseThrow(() ->
 					new IllegalStateException("Solicitud no encontrada para queryId: " + queryId));
@@ -59,8 +67,8 @@ public class SolicitudService {
 		solicitudEntity.setEstadoInterno(EstadoInterno.EN_PROCESO);
 		}
 		
-		solicitudEntity.setFechaUltimaActualizacion(
-		LocalDateTime.now(ZoneOffset.UTC));
+		solicitudEntity.setFechaUltimaActualizacion(OffsetDateTime.now(ZoneOffset.UTC));
+			 
 	}
+		
 }
-

@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class OrdenDescargaDocumentoService {
+public class OrdenDescargaDocumentoClient {
 	
 	private final WebClient webClient;
 	private final OrquestadorProperties props;

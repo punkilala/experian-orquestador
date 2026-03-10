@@ -6,9 +6,8 @@ import static bs.experian.orquestador.domain.constants.ExperianConstants.SUBSTAT
 
 import org.springframework.stereotype.Component;
 
-import bs.experian.orquestador.application.OrquestadorTxService;
+import bs.experian.orquestador.application.DocumentosApplicagtionService;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
-import bs.experian.orquestador.infrastructure.webclient.OrdenDescargaDocumentoService;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -20,8 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProcesadorNewAvailableDocument implements EventoProcesador {
 	
-	private final OrdenDescargaDocumentoService ordenDescargaDocumentoService;
-	private final OrquestadorTxService txService;
+	private final DocumentosApplicagtionService documentosApplicagtionService;
 
 	@Override
 	public boolean aplica(EventoProcesadoDto evento) {
@@ -33,10 +31,8 @@ public class ProcesadorNewAvailableDocument implements EventoProcesador {
 
 	@Override
 	public void procesar(EventoProcesadoDto evento) {
-		//registrar documento en la tabla DocumentosSolicitdes
-		txService.registrarDocumentoPteDescarga(evento);
-		//enviar documento a integracion
-		ordenDescargaDocumentoService.ordenarDescarga(evento);
+		//registrar documento en la tabla DocumentosSolicitdes y llamar a integracion pdara pasarselo
+		documentosApplicagtionService.registrarDocumentoPteDescarga(evento);
 		evento.setProcesado(true);
 	}
 

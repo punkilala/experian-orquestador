@@ -3,6 +3,7 @@ package bs.experian.orquestador.infrastructure.persistence.solicitud;
 
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import bs.experian.orquestador.domain.enums.DomainEnum;
 import jakarta.persistence.Column;
@@ -32,10 +33,10 @@ public class SolicitudEntity {
 	private String  requestReference ;
 	
 	@Column(name = "FECHA_CREACION")
-	private LocalDateTime fechaCreacion;
+	private OffsetDateTime fechaCreacion;
 	
 	@Column(name = "FECHA_ULTIMA_ACTUALIZACION")
-	private LocalDateTime fechaUltimaActualizacion;
+	private OffsetDateTime fechaUltimaActualizacion;
 
 	
 	@Column(name = "ESTADO_EXPERIAN", nullable = false)

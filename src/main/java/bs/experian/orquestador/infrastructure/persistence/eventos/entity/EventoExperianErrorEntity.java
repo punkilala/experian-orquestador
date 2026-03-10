@@ -1,4 +1,4 @@
-package bs.experian.orquestador.infrastructure.persistence.eventos;
+package bs.experian.orquestador.infrastructure.persistence.eventos.entity;
 
 import java.time.OffsetDateTime;
 

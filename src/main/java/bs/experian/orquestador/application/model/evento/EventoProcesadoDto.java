@@ -28,7 +28,9 @@ public class EventoProcesadoDto {
     public static class Documento {
     	private String documentCode; 
     	private String pdfDocumentUrl; 
-    	private String jsonDocumentUrl; 
+    	private String jsonDocumentUrl;
+    	private String errorCode;
+    	private String errorMessage;
     }
 }
 

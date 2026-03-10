@@ -9,9 +9,9 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import bs.experian.orquestador.application.OrquestadorTxService;
+import bs.experian.orquestador.application.EventoApplicationService;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
-import bs.experian.orquestador.infrastructure.persistence.eventos.EventoExperianVivoEntity;
+import bs.experian.orquestador.infrastructure.persistence.eventos.entity.EventoExperianVivoEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,15 +20,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EventoExperianWorker {
 
-	
-	private final OrquestadorTxService txService;
 	private final RouterEventosExperian routerEventosExperian;
+	private final EventoApplicationService eventoApplicationService;
 
 	
 	@Scheduled(fixedDelayString = "15000")
 	public void  procesarEventos() {
 		System.out.println("Worker ejecutándose...");
-		Optional<EventoExperianVivoEntity> eventoOptional = txService.reclamarEvento();
+		Optional<EventoExperianVivoEntity> eventoOptional = eventoApplicationService.reclamarEvento();
 		
 		//cola de eventos pte procesar vacia
 		if (eventoOptional.isEmpty()) {
@@ -44,7 +43,7 @@ public class EventoExperianWorker {
 		try {
 			//procesar evento
 			eventoProcesado = routerEventosExperian.procesar(evento);
-			txService.finalizarEvento(evento, eventoProcesado);
+			eventoApplicationService.finalizarEvento(evento, eventoProcesado);
 	
     	}catch (IllegalArgumentException | JsonProcessingException | DataIntegrityViolationException e) {
     		System.out.println("FIN Worker IllegalArgumentException Y MAS...");
@@ -55,7 +54,7 @@ public class EventoExperianWorker {
     		}
     		evento.setErrorCode("ERROR_FUNCIONAL");
     		evento.setErrorMensaje(e.getMessage());
-            txService.eventoConErrorFuncional(evento, eventoProcesado);
+    		eventoApplicationService.eventoNoProcesadoErrorFuncional(evento, eventoProcesado);
 		}catch (Exception e) {
 			System.out.println("FIN Worker Exception...");
 			log.error("Worker Exception..", e);
@@ -63,7 +62,7 @@ public class EventoExperianWorker {
 			if (null == eventoProcesado) {
     			eventoProcesado = informarEventoDto(evento);
     		}
-		    txService.reprogramarEvento(evento.getId(), "ERROR_TECNICO", e.getMessage());
+			eventoApplicationService.reprogramarEvento(evento.getId(), "ERROR_TECNICO", e.getMessage());
 		}
 		
 		System.out.println("Worker acabo DE PROCESAR...");

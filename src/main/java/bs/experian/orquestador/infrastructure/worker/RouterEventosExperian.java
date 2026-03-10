@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import bs.experian.orquestador.application.eventos.EventoProcesador;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
-import bs.experian.orquestador.infrastructure.persistence.eventos.EventoExperianVivoEntity;
+import bs.experian.orquestador.infrastructure.persistence.eventos.entity.EventoExperianVivoEntity;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -44,6 +44,8 @@ public class RouterEventosExperian {
 		String codeDocument = eventData.path("documentCode").asText();
 		String pdfDocumentUrl = eventData.path("pdfDocumentUrl").asText();
 		String jsonDocumentUrl = eventData.path("jsonDocumentUrl").asText();
+		String errorCode = eventData.path("errorCode").asText();
+		String errorMessage = eventData.path("errorMessage").asText();
 		
 		return  EventoProcesadoDto.builder()
 				.idLong(evento.getId())
@@ -55,6 +57,8 @@ public class RouterEventosExperian {
 						.documentCode(codeDocument)
 						.pdfDocumentUrl(pdfDocumentUrl)
 						.jsonDocumentUrl(jsonDocumentUrl)
+						.errorCode(errorCode)
+						.errorMessage(errorMessage)
 						.build())
 				.procesado(false)
 				.build();

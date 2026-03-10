@@ -1,4 +1,4 @@
-package bs.experian.orquestador.infrastructure.persistence.eventos;
+package bs.experian.orquestador.infrastructure.persistence.eventos.repository;
 
 import java.util.Optional;
 
@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import bs.experian.orquestador.application.model.evento.EventoDto;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
+import bs.experian.orquestador.infrastructure.persistence.eventos.entity.EventoExperianVivoEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

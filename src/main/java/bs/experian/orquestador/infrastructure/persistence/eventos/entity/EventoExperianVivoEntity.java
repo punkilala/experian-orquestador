@@ -1,13 +1,16 @@
-package bs.experian.orquestador.infrastructure.persistence.eventos;
+package bs.experian.orquestador.infrastructure.persistence.eventos.entity;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,8 +21,10 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class EventoExperianVivoEntity {
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID_EVENTO")
 	private Long id;
 	@Column(name = "QUERY_ID", length = 60, nullable = false)
@@ -38,11 +43,11 @@ public class EventoExperianVivoEntity {
 	@Column(name = "INTENTOS", nullable = false)
 	private Integer intentos;
 	@Column(name = "NEXT_RETRY")
-	private LocalDateTime nextRetry;
+	private OffsetDateTime nextRetry;
 	@Column(name = "PROCESO_DESDE")
-	private LocalDateTime procesoDesde;
+	private OffsetDateTime	 procesoDesde;
 	@Column(name = "FECHA_ALTA", nullable = false)
-	private LocalDateTime fechaAlta;
+	private OffsetDateTime fechaAlta;
 	@Column(name = "ERROR_CODE", length = 50)
 	private String errorCode;
 	@Column(name = "ERROR_MENSAJE", length = 4000)

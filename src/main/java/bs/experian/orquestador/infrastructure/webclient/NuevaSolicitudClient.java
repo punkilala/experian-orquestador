@@ -5,7 +5,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import bs.experian.orquestador.application.OrquestadorTxService;
 import bs.experian.orquestador.infrastructure.config.OrquestadorProperties;
 import bs.experian.orquestador.infrastructure.dto.integracion.SolicitudNuevaRequest;
 import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudNuevaResponse;
@@ -14,19 +13,17 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class NuevaSolicitudService{
+public class NuevaSolicitudClient{
 	
 	private final WebClient webClient;
 	private final OrquestadorProperties props;
-	private final OrquestadorTxService txService;
-
 	
 	public SolicitudNuevaResponse crearSolicitud(SolicitudNuevaRequest request) {
 		//obtener properties
 		String urlSolicitudes = props.getApi().getIntegracion().getExperianSolicitudesUrl();
 		
 		//llamada integracion
-		SolicitudNuevaResponse response = webClient
+		return webClient
 				.post()
 				.uri(urlSolicitudes)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -37,10 +34,6 @@ public class NuevaSolicitudService{
 					    resp -> WebclientErrorMapper.toAgoraException(resp, "Error llamando a integracion-experian al crear solicitud"))
 				.bodyToMono(SolicitudNuevaResponse.class)
 				.block();
-		
-		txService.crearSolicitud(request, response);
-		
-		return response;
 	}
 
 }

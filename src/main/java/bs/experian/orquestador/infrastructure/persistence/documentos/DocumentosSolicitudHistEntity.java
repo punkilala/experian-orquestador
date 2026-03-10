@@ -40,6 +40,12 @@ public class DocumentosSolicitudHistEntity {
     @Lob
     @Column(name = "DOCUMENT_JSON")
     private String documentJson;
+    
+    @Column(name = "ERROR_CODE", length = 50)
+    private String errorCode;
+
+    @Column(name = "ERROR_MENSAJE", length = 4000)
+    private String errorMensaje;
 
     @Column(name = "FECHA_ALTA", nullable = false)
     private OffsetDateTime fechaAlta;
