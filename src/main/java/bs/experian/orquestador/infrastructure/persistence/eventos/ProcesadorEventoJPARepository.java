@@ -70,7 +70,7 @@ public class ProcesadorEventoJPARepository {
 
 		entity.setEstadoTecnico("PENDIENTE");
 		entity.setIntentos(entity.getIntentos() + 1);
-		entity.setNextRetry(OffsetDateTime.now().plusMinutes(1));
+		entity.setNextRetry(OffsetDateTime.now().plusHours(1));
 		entity.setProcesoDesde(null);
 		entity.setErrorCode(error);
 		entity.setErrorMensaje(errorMesg);

@@ -13,8 +13,8 @@ public class DescargaDocumentoRequest {
 	
 	private String queryId;
 	private String documentCode;
-	private String pdfDocumentUrl;
-	private String jsonDocumentUrl;
+	private String pdfUrl;
+	private String jsonUrl;
 	
 
 }
