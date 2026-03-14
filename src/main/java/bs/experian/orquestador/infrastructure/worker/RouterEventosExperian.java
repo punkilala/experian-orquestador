@@ -41,25 +41,14 @@ public class RouterEventosExperian {
 		JsonNode eventData = root.path("eventData");
 		String estado = eventData.path("status").asText();
 		String subEstado = eventData.path("substatus").asText();
-		String codeDocument = eventData.path("documentCode").asText();
-		String pdfDocumentUrl = eventData.path("pdfDocumentUrl").asText();
-		String jsonDocumentUrl = eventData.path("jsonDocumentUrl").asText();
-		String errorCode = eventData.path("errorCode").asText();
-		String errorMessage = eventData.path("errorMessage").asText();
 		
 		return  EventoProcesadoDto.builder()
 				.idLong(evento.getId())
 				.queryId(evento.getQueryId())
+				.payloadJson(evento.getPayloadJson())
 				.eventType(eventType)
 				.estadoExperian(estado)
 				.subestadoExperian(subEstado)
-				.documento(EventoProcesadoDto.Documento.builder()
-						.documentCode(codeDocument)
-						.pdfDocumentUrl(pdfDocumentUrl)
-						.jsonDocumentUrl(jsonDocumentUrl)
-						.errorCode(errorCode)
-						.errorMessage(errorMessage)
-						.build())
 				.procesado(false)
 				.build();
 		

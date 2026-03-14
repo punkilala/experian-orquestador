@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import bs.experian.orquestador.application.model.evento.EventoDto;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
-import bs.experian.orquestador.domain.enums.DomainEnum;
+import bs.experian.orquestador.domain.OrigenEventoDomain;
 import bs.experian.orquestador.infrastructure.exceptions.AgoraException;
 import bs.experian.orquestador.infrastructure.persistence.eventos.ProcesadorEventoJDBCRepository;
 import bs.experian.orquestador.infrastructure.persistence.eventos.ProcesadorEventoJPARepository;
@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EventoApplicationService {
 	private final ObjectMapper objectMapper;
+	private final OrigenEventoDomain origenEventoDomain;
 	
 	private final SolicitudApplicationService solicitudApplicationService;
 	
@@ -42,7 +43,7 @@ public class EventoApplicationService {
 		try {
 			payload = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request);
 			//encolar evento recibido
-			procesadorEventoJPARepository.encolarEvento(request, DomainEnum.TiposEventosHistoricos.EXPERIAN.name(), payload);
+			procesadorEventoJPARepository.encolarEvento(request, origenEventoDomain.origen(request.getNotificationId()), payload);
 		} catch (JsonProcessingException e) {
 			log.error("ERR ORQUESTADOR-EXPERIAN - evento mal formado al recibirlo de Experian", e);
 			throw new AgoraException(HttpStatus.BAD_REQUEST.value(), "evento mal formado", 

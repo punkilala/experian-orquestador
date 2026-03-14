@@ -39,6 +39,9 @@ public class DocumentosSolicitudEntity {
     @Lob
     @Column(name = "DOCUMENT_JSON")
     private String documentJson;
+    
+    @Column(name = "DESCARGADO_PDF" , length = 6)
+    private String descargadoPdf;
 
     @Column(name = "FECHA_ALTA", nullable = false, updatable = false)
     private OffsetDateTime fechaAlta;

@@ -88,6 +88,14 @@ public class ProcesadorEventoJPARepository {
 		if(null == dto.getDocumento()) {
 			dto.setDocumento(new Documento());
 		}
+		
+		String payload = eventoCola.getPayloadJson();
+		if (payload.contains("\"jsonDocument\"")) {
+		    payload = payload.replaceAll(
+		            "(?s)\"jsonDocument\"\\s*:\\s*\"\\{.*?\\}\"",
+		            "\"jsonDocument\" : \"true\""
+		    );
+		}
 		EventosExperianHistEntity eventoHist = new EventosExperianHistEntity(
 				eventoCola.getId(),
 				eventoCola.getQueryId(),
@@ -97,7 +105,7 @@ public class ProcesadorEventoJPARepository {
 				dto.getEstadoExperian(),
 				dto.getSubestadoExperian(),
 				dto.getDocumento().getDocumentCode(),
-				eventoCola.getPayloadJson(),
+				payload,
 				eventoCola.getFechaAlta(),
 				OffsetDateTime.now(),
 				"PROCESADO",
@@ -119,6 +127,10 @@ public class ProcesadorEventoJPARepository {
 	
 	public void eventoNoProcesadoErrorFuncional (EventoExperianVivoEntity evento, EventoProcesadoDto eventoProcesadoDto) {
 		//guardar en tabla de errores
+		String documento = null;
+		if(null != eventoProcesadoDto.getDocumento()) {
+			documento = eventoProcesadoDto.getDocumento().getDocumentCode();
+		}
 		EventoExperianErrorEntity errorEntity = new EventoExperianErrorEntity(
 				evento.getId(),
 				evento.getQueryId(),
@@ -127,7 +139,7 @@ public class ProcesadorEventoJPARepository {
 				evento.getEventType(),
 				eventoProcesadoDto.getEstadoExperian(),
 				eventoProcesadoDto.getSubestadoExperian(),
-				eventoProcesadoDto.getDocumento().getDocumentCode(),
+				documento,
 				evento.getPayloadJson(),
 				evento.getErrorCode(),
 				evento.getErrorMensaje(),

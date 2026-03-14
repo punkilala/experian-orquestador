@@ -1,7 +1,6 @@
 package bs.experian.orquestador.application;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
 import bs.experian.orquestador.infrastructure.persistence.documentos.ProcesadorDocumentoRepository;
@@ -34,9 +33,17 @@ public class DocumentosApplicagtionService {
 	 * Pasar a historico un documento que experian dice que no lo ha obtenido
 	 * @param dto
 	 */
-	@Transactional
 	public void registrarDocEnHistExperianNoObtenido(EventoProcesadoDto dto) {
 		procesadorDocumentoRepository.registrarDocEnHistExperianNoObtenido(dto);
+	}
+	
+	
+	/**
+	 * actualizar el estado del evento de descargaDocumento
+	 * @param dto
+	 */
+	public void documentoDescargado (EventoProcesadoDto dto) {
+		procesadorDocumentoRepository.docummentoDescargado(dto);
 	}
 
 }

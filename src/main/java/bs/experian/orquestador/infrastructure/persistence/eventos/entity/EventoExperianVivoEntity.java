@@ -50,7 +50,8 @@ public class EventoExperianVivoEntity {
 	private OffsetDateTime fechaAlta;
 	@Column(name = "ERROR_CODE", length = 50)
 	private String errorCode;
-	@Column(name = "ERROR_MENSAJE", length = 4000)
+	@Lob
+	@Column(name = "ERROR_MENSAJE")
 	private String errorMensaje;
 	
 	

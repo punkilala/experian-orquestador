@@ -6,6 +6,10 @@ import static bs.experian.orquestador.domain.constants.ExperianConstants.SUBSTAT
 
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import bs.experian.orquestador.application.DocumentosApplicagtionService;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class ProcesadorNewAvailableDocument implements EventoProcesador {
 	
 	private final DocumentosApplicagtionService documentosApplicagtionService;
+	private final ObjectMapper objectMapper;
 
 	@Override
 	public boolean aplica(EventoProcesadoDto evento) {
@@ -30,7 +35,21 @@ public class ProcesadorNewAvailableDocument implements EventoProcesador {
 	}
 
 	@Override
-	public void procesar(EventoProcesadoDto evento) {
+	public void procesar(EventoProcesadoDto evento) throws JsonProcessingException {
+		JsonNode root = objectMapper.readTree(evento.getPayloadJson());
+		JsonNode eventData = root.path("eventData");
+		
+		String codeDocument = eventData.path("documentCode").asText();
+		String pdfDocumentUrl = eventData.path("pdfDocumentUrl").asText();
+		String jsonDocumentUrl = eventData.path("jsonDocumentUrl").asText();
+		evento.setDocumento(
+				EventoProcesadoDto.Documento.builder()
+						.documentCode(codeDocument)
+						.pdfDocumentUrl(pdfDocumentUrl)
+						.jsonDocumentUrl(jsonDocumentUrl)
+						.build()
+				);
+		
 		//registrar documento en la tabla DocumentosSolicitdes y llamar a integracion pdara pasarselo
 		documentosApplicagtionService.registrarDocumentoPteDescarga(evento);
 		evento.setProcesado(true);

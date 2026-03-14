@@ -20,4 +20,8 @@ public final class ExperianConstants {
     
     public static final String STATUS_ERROR = "Error";
     public static final String SUBSTATUS_DOCUMENT_DWONLOAD_FAILED = "document_download_failed";
+    
+    public static final String EVENT_DOCUMENTO_DESCARGADO = "DocumentoDescargado";
+    public static final String STATUS_DOCUMENTO_DESCARGADO = "documento_descargado";
+    
 }

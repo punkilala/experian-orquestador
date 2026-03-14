@@ -41,6 +41,9 @@ public class DocumentosSolicitudHistEntity {
     @Column(name = "DOCUMENT_JSON")
     private String documentJson;
     
+    @Column(name = "DESCARGADO_PDF" , length = 6)
+    private String descargadoPdf;
+    
     @Column(name = "ERROR_CODE", length = 50)
     private String errorCode;
 

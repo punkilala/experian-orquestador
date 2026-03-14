@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import bs.experian.orquestador.application.EventoApplicationService;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
+import bs.experian.orquestador.application.utils.OrquestadorUtils;
 import bs.experian.orquestador.infrastructure.persistence.eventos.entity.EventoExperianVivoEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,15 +46,16 @@ public class EventoExperianWorker {
 			eventoProcesado = routerEventosExperian.procesar(evento);
 			eventoApplicationService.finalizarEvento(evento, eventoProcesado);
 	
-    	}catch (IllegalArgumentException | JsonProcessingException | DataIntegrityViolationException e) {
+    	}catch (IllegalArgumentException | JsonProcessingException 
+    			| DataIntegrityViolationException e) {
     		System.out.println("FIN Worker IllegalArgumentException Y MAS...");
     		log.error("Worker IllegalArgumentException..", e);
 		    //evento no reintentable pasasr a eventos errores finales
     		if (null == eventoProcesado) {
     			eventoProcesado = informarEventoDto(evento);
     		}
-    		evento.setErrorCode("ERROR_FUNCIONAL");
-    		evento.setErrorMensaje(e.getMessage());
+    		evento.setErrorCode(e.getMessage());
+    		evento.setErrorMensaje(OrquestadorUtils.stackTraceToString(e, 20) );
     		eventoApplicationService.eventoNoProcesadoErrorFuncional(evento, eventoProcesado);
 		}catch (Exception e) {
 			System.out.println("FIN Worker Exception...");
@@ -62,7 +64,7 @@ public class EventoExperianWorker {
 			if (null == eventoProcesado) {
     			eventoProcesado = informarEventoDto(evento);
     		}
-			eventoApplicationService.reprogramarEvento(evento.getId(), "ERROR_TECNICO", e.getMessage());
+			eventoApplicationService.reprogramarEvento(evento.getId(), "ERROR_TECNICO", (OrquestadorUtils.stackTraceToString(e, 20)));
 		}
 		
 		System.out.println("Worker acabo DE PROCESAR...");

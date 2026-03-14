@@ -48,7 +48,7 @@ public class EventoExperianErrorEntity {
 	    @Column(name = "PAYLOAD_JSON", nullable = false)
 	    private String payloadJson;
 
-	    @Column(name = "ERROR_CODE", nullable = false, length = 50)
+	    @Column(name = "ERROR_CODE", length = 1000)
 	    private String errorCode;
 
 	    @Lob

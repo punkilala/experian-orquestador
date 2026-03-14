@@ -6,6 +6,10 @@ import static bs.experian.orquestador.domain.constants.ExperianConstants.SUBSTAT
 
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import bs.experian.orquestador.application.DocumentosApplicagtionService;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class ProcesadorDocumentDownloadFailed implements EventoProcesador {
-	
+	private final ObjectMapper objectMapper;
 	private final DocumentosApplicagtionService documentosApplicagtionService;
 
 	@Override
@@ -29,7 +33,22 @@ public class ProcesadorDocumentDownloadFailed implements EventoProcesador {
 	}
 
 	@Override
-	public void procesar(EventoProcesadoDto evento) {
+	public void procesar(EventoProcesadoDto evento) throws JsonProcessingException {
+		JsonNode root = objectMapper.readTree(evento.getPayloadJson());
+		JsonNode eventData = root.path("eventData");
+		
+		String codeDocument = eventData.path("documentCode").asText();
+		String errorCode = eventData.path("errorCode").asText();
+		String errorMessasge = eventData.path("errorMessage").asText();
+		
+		evento.setDocumento(
+			    EventoProcesadoDto.Documento.builder()
+			        .documentCode(codeDocument)
+			        .errorCode(errorCode)
+			        .errorMessage(errorMessasge)
+			        .build()
+			);
+		
 		documentosApplicagtionService.registrarDocEnHistExperianNoObtenido(evento);
 		evento.setProcesado(true);
 	}
