@@ -12,47 +12,71 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import bs.experian.orquestador.application.model.evento.EventoDto;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
-import bs.experian.orquestador.domain.OrigenEventoDomain;
+import static bs.experian.orquestador.application.utils.OrquestadorUtils.*;
 import bs.experian.orquestador.infrastructure.exceptions.AgoraException;
+import bs.experian.orquestador.infrastructure.persistence.documentos.ProcesadorDocumentoRepository;
 import bs.experian.orquestador.infrastructure.persistence.eventos.ProcesadorEventoJDBCRepository;
 import bs.experian.orquestador.infrastructure.persistence.eventos.ProcesadorEventoJPARepository;
 import bs.experian.orquestador.infrastructure.persistence.eventos.entity.EventoExperianVivoEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
+import static bs.experian.orquestador.domain.enums.DomainEnum.TiposEventosHistoricos.*;
+
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EventoApplicationService {
 	private final ObjectMapper objectMapper;
-	private final OrigenEventoDomain origenEventoDomain;
 	
 	private final SolicitudApplicationService solicitudApplicationService;
 	
 	private final ProcesadorEventoJPARepository procesadorEventoJPARepository;
 	private final ProcesadorEventoJDBCRepository procesadorEventoJDBCRepository;
+	private final ProcesadorDocumentoRepository procesadorDocumentoRepository;
 
 	
 	/**
 	 * Evento recibido de experian lo guardamos en la cola de trabajo del worker
 	 * @param request
 	 */
-	@Transactional
 	public void recibirEventoExperian(EventoDto request) {
 		String payload = "";
+		String origen = null;
 		try {
 			payload = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request);
+			
+			origen = null != request.getOrigen() ? request.getOrigen() : EXPERIAN.name();
+			
+			if(EVENT_NEW_DOCUMENT_AVAILABLE.equalsIgnoreCase(request.getEventType())) {
+				procesadorDocumentoRepository.buscarNotificacionDuplicadaEnDoc(request.getQueryId(), request.getNotificationId());
+			}
+			
 			//encolar evento recibido
-			procesadorEventoJPARepository.encolarEvento(request, origenEventoDomain.origen(request.getNotificationId()), payload);
+			procesadorEventoJPARepository.encolarEvento(request, origen, payload);
+			
 		} catch (JsonProcessingException e) {
 			log.error("ERR ORQUESTADOR-EXPERIAN - evento mal formado al recibirlo de Experian", e);
 			throw new AgoraException(HttpStatus.BAD_REQUEST.value(), "evento mal formado", 
-					Map.of("campo", "request", "valor", request));
+					Map.of("origen", "request", "valor", request));
+			
 		} catch  (DataIntegrityViolationException e) {
 			// solicitud no existe
-	    	log.error("ERR ORQUESTADOR-EXPERIAN -  solicitud no encontrada: " + request.getQueryId());
-	        throw new AgoraException(HttpStatus.NOT_FOUND.value(), "solicitud no encontrada o notificacion duplicada", 
-	        		Map.of("campo", "queryId", "mensaje", request.getQueryId()));
+			String errOra = getOra(e);
+			if(ORA_NO_EXISTE.equalsIgnoreCase(errOra)) {
+				log.error("ERR ORQUESTADOR-EXPERIAN -  solicitud no encontrada: " + request.getQueryId());
+		        throw new AgoraException(HttpStatus.NOT_FOUND.value(), "solicitud no encontrada", 
+		        		Map.of("campo", "queryId", "mensaje", request.getQueryId()));
+			}else if ("DUPLICADO".equals(e.getMessage())){
+				log.error("ERR ORQUESTADOR-EXPERIAN -  Notificacion duplicada para: " + request.getQueryId());
+				procesadorEventoJPARepository.moverEventoNoProcesadoToHist(request, origen, payload, "NOK", e.getMessage(), stackTraceToString(e, 20));
+		       
+			}else {
+				log.error("ERR ORQUESTADOR-EXPERIAN -  error de BDD para: " + request.getQueryId(), stackTraceToString(e, 20));
+		        throw new AgoraException(HttpStatus.SERVICE_UNAVAILABLE.value(), "Error en bdd", 
+		        		Map.of("campo", "Bdd", "mensaje", request.getQueryId()));
+			}
 
 		}
 	}
@@ -87,7 +111,7 @@ public class EventoApplicationService {
 	public void finalizarEvento (EventoExperianVivoEntity evento, EventoProcesadoDto eventoProcesadoDto) {
 		
 		//mover evento a historico
-		procesadorEventoJPARepository.moverEventoProcesadoToHist(evento, eventoProcesadoDto);
+		procesadorEventoJPARepository.moverEventoProcesadoToHist(evento, eventoProcesadoDto, "OK");
 		
 		//borrar evento de la cola de trabajo del worker
 		procesadorEventoJPARepository.borraEventoDeColaWorker(evento.getId());
@@ -106,7 +130,7 @@ public class EventoApplicationService {
 	 */
 	@Transactional
 	public void eventoNoProcesadoErrorFuncional(EventoExperianVivoEntity evento, EventoProcesadoDto dto) {
-		procesadorEventoJPARepository.eventoNoProcesadoErrorFuncional(evento, dto);
+		procesadorEventoJPARepository.eventoNoProcesadoErrorFuncional(evento, dto, "NOK");
 	}
 	
 

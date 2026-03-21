@@ -6,7 +6,12 @@ public final class ExperianConstants {
     private ExperianConstants() {
     	 throw new UnsupportedOperationException(ExperianConstants.class.getName() + " no instanciable");
     }
-
+    
+    //err ORA
+    public static final String ORA_NO_EXISTE = "ORA-02291";
+    public static final String ORA_DUPLICADO = "ORA-00001";
+    
+    //eventos
     public static final String EVENT_STATUS_CHANGED = "StatusChanged";
     public static final String EVENT_NEW_DOCUMENT_AVAILABLE = "NewDocumentAvailable";
 
@@ -23,5 +28,14 @@ public final class ExperianConstants {
     
     public static final String EVENT_DOCUMENTO_DESCARGADO = "DocumentoDescargado";
     public static final String STATUS_DOCUMENTO_DESCARGADO = "documento_descargado";
+    
+    public static final String DOC_NO_DESCARGADO = "NO_DESCARGADO";
+    public static final String DOC_PTE_DESCARGA = "PTE_DESCARGA";
+    public static final String DOC_PTE_CUSTODIA = "PTE_CUSTODIA";
+    
+    public static final String EVENT_TYPE_CUSTODIA = "Custodia_Documento";
+    public static final String STATUS_CUSTODIA = "documento_procesado";
+    
+    
     
 }

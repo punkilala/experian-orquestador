@@ -4,8 +4,10 @@ import org.springframework.stereotype.Service;
 
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
 import bs.experian.orquestador.infrastructure.persistence.documentos.ProcesadorDocumentoRepository;
+import bs.experian.orquestador.infrastructure.webclient.OrdenCustodiaDocumentoClient;
 import bs.experian.orquestador.infrastructure.webclient.OrdenDescargaDocumentoClient;
 import lombok.RequiredArgsConstructor;
+import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
 
 @Service
 @RequiredArgsConstructor
@@ -13,6 +15,7 @@ public class DocumentosApplicagtionService {
 	
 	private final ProcesadorDocumentoRepository procesadorDocumentoRepository;
 	private final OrdenDescargaDocumentoClient ordenDescargaDocumentoClient;
+	private final OrdenCustodiaDocumentoClient ordenCustodiaDocumentoClient;
 	
 	/**
 	 * Experian notifica que un documento esta disponible
@@ -23,8 +26,9 @@ public class DocumentosApplicagtionService {
 	public void registrarDocumentoPteDescarga (EventoProcesadoDto dto) {
 		//registrar en bdd
 		procesadorDocumentoRepository.registrarDocumentoPteDescarga(dto);
-		//llamar a integracion para que lo descarge
+		//llamar a integracion para que lo descarge{
 		ordenDescargaDocumentoClient.ordenarDescarga(dto);
+		
 	
 	}
 	
@@ -39,11 +43,15 @@ public class DocumentosApplicagtionService {
 	
 	
 	/**
-	 * actualizar el estado del evento de descargaDocumento
+	 * actualizar el estado del documento descargado/custodiado
 	 * @param dto
 	 */
-	public void documentoDescargado (EventoProcesadoDto dto) {
-		procesadorDocumentoRepository.docummentoDescargado(dto);
+	public void actualizarEstadoDocumento (EventoProcesadoDto dto) {
+		if(null != dto.getDocumento() && DOC_PTE_CUSTODIA.equals(dto.getDocumento().getPdfDocument())){
+			//llamar para custodiar
+			ordenCustodiaDocumentoClient.ordenarCustodia(dto);
+		}
+		procesadorDocumentoRepository.actualizarEstadoDocumento(dto);
 	}
-
+	
 }

@@ -14,6 +14,7 @@ import lombok.Setter;
 public class EventoProcesadoDto {
 	private Long idLong;
 	private String queryId;
+	private String notificationId;
 	private String eventType;
 	private String payloadJson;
 	private String estadoExperian;
@@ -30,7 +31,7 @@ public class EventoProcesadoDto {
     	private String documentCode; 
     	private String pdfDocumentUrl; 
     	private String jsonDocumentUrl;
-    	private Boolean pdfDocument;
+    	private String pdfDocument;
     	private String jsonDocument;
     	private String errorCode;
     	private String errorMessage;

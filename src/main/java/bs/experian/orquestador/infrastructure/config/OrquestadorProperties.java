@@ -19,6 +19,7 @@ public class OrquestadorProperties {
     public static class Api {
 
         private Integracion integracion;
+        private Custodia custodia;
         private Integer timeoutrequest;
         private Integer timeoutresponse;
     }
@@ -30,6 +31,14 @@ public class OrquestadorProperties {
         private String baseUrl;
         private String experianSolicitudesUrl;
         private String experianDescargaDocumentoUrl;
+    }
+    
+    @Getter
+    @Setter
+    public static class Custodia {
+
+        private String baseUrl;
+        private String custodiaDocUrl;
     }
 
 }

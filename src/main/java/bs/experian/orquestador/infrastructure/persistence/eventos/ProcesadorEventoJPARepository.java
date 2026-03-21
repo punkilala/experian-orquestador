@@ -2,18 +2,16 @@ package bs.experian.orquestador.infrastructure.persistence.eventos;
 
 
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import bs.experian.orquestador.application.model.evento.EventoDto;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
 import bs.experian.orquestador.application.model.evento.EventoProcesadoDto.Documento;
-import bs.experian.orquestador.infrastructure.persistence.eventos.entity.EventoExperianErrorEntity;
 import bs.experian.orquestador.infrastructure.persistence.eventos.entity.EventoExperianVivoEntity;
 import bs.experian.orquestador.infrastructure.persistence.eventos.entity.EventosExperianHistEntity;
-import bs.experian.orquestador.infrastructure.persistence.eventos.repository.EventoExperianErrorRepository;
 import bs.experian.orquestador.infrastructure.persistence.eventos.repository.EventoExperianHistRepository;
 import bs.experian.orquestador.infrastructure.persistence.eventos.repository.EventoExperianVivoRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +24,6 @@ public class ProcesadorEventoJPARepository {
 	
 	private final EventoExperianVivoRepository eventoExperianVivoRepository;
 	private final EventoExperianHistRepository eventoExperianHistRepository;
-	private final EventoExperianErrorRepository eventoExperianErrorRepository;
 	
 	/**
 	 * Al recibir un nuevo evento de Experian se inserta en la cola de trabajo del worker
@@ -34,6 +31,7 @@ public class ProcesadorEventoJPARepository {
 	 * @param origenEvento
 	 * @param payloadJson
 	 */
+	@Transactional
 	public void encolarEvento(EventoDto evento, String origenEvento, String payloadJson) {	
 		
         EventoExperianVivoEntity entity = EventoExperianVivoEntity.builder()
@@ -57,6 +55,7 @@ public class ProcesadorEventoJPARepository {
 	 * @param error
 	 * @param errorMesg
 	 */
+	@Transactional
 	public void reprogramarEvento(Long eventoId, String error, String errorMesg) {
 		
 		Optional<EventoExperianVivoEntity> optional = eventoExperianVivoRepository.findById(eventoId);
@@ -83,7 +82,7 @@ public class ProcesadorEventoJPARepository {
 	 * @param eventoCola
 	 * @param dto
 	 */
-	public void moverEventoProcesadoToHist(EventoExperianVivoEntity eventoCola,EventoProcesadoDto dto) {
+	public void moverEventoProcesadoToHist(EventoExperianVivoEntity eventoCola,EventoProcesadoDto dto, String procesado) {
 		
 		if(null == dto.getDocumento()) {
 			dto.setDocumento(new Documento());
@@ -96,24 +95,45 @@ public class ProcesadorEventoJPARepository {
 		            "\"jsonDocument\" : \"true\""
 		    );
 		}
-		EventosExperianHistEntity eventoHist = new EventosExperianHistEntity(
-				eventoCola.getId(),
-				eventoCola.getQueryId(),
-				eventoCola.getNotificationId(),
-				eventoCola.getOrigenEvento(),
-				eventoCola.getEventType(),
-				dto.getEstadoExperian(),
-				dto.getSubestadoExperian(),
-				dto.getDocumento().getDocumentCode(),
-				payload,
-				eventoCola.getFechaAlta(),
-				OffsetDateTime.now(),
-				"PROCESADO",
-				eventoCola.getErrorCode(),
-				eventoCola.getErrorMensaje()			
-		);
+		EventosExperianHistEntity entity = new EventosExperianHistEntity();
+		entity.setQueryId(eventoCola.getQueryId());
+		entity.setNotificationId(eventoCola.getNotificationId());
+		entity.setOrigenEvento(eventoCola.getOrigenEvento());
+		entity.setEventType(eventoCola.getEventType());
+		entity.setEstadoExperian(dto.getEstadoExperian());
+		entity.setSubestadoExperian(dto.getSubestadoExperian());
+		entity.setDocumentCode(dto.getDocumento().getDocumentCode());
+		entity.setPayloadJson(payload);
+		entity.setFechaAlta(eventoCola.getFechaAlta());
+		entity.setFechaProcesado(OffsetDateTime.now());
+		entity.setErrorCode(eventoCola.getErrorCode());
+		entity.setResultadoProceso(procesado);
+		entity.setErrorMensaje(eventoCola.getErrorMensaje());
 		
-		eventoExperianHistRepository.save(eventoHist);	
+		eventoExperianHistRepository.save(entity);	
+	}
+	
+	/**
+	 * mover a historico evento que no se puede encolar
+	 * 
+	 */
+	public void moverEventoNoProcesadoToHist(EventoDto request, String origen, String payload,
+			String resultado, String errCode, String errMsj) {
+		
+		EventosExperianHistEntity entity = new EventosExperianHistEntity();
+		entity.setQueryId(request.getQueryId());
+		entity.setNotificationId(request.getNotificationId());
+		entity.setOrigenEvento(origen);
+		entity.setEventType(request.getEventType());
+		entity.setPayloadJson(payload);
+		entity.setFechaAlta(OffsetDateTime.now());
+		entity.setFechaProcesado(OffsetDateTime.now());
+		entity.setResultadoProceso(resultado);
+		entity.setErrorCode(errCode);
+		entity.setErrorMensaje(errMsj);
+		
+		eventoExperianHistRepository.save(entity);
+		
 	}
 	
 	/**
@@ -124,30 +144,17 @@ public class ProcesadorEventoJPARepository {
 		eventoExperianVivoRepository.deleteById(idEvento);
 	}
 	
-	
-	public void eventoNoProcesadoErrorFuncional (EventoExperianVivoEntity evento, EventoProcesadoDto eventoProcesadoDto) {
-		//guardar en tabla de errores
-		String documento = null;
-		if(null != eventoProcesadoDto.getDocumento()) {
-			documento = eventoProcesadoDto.getDocumento().getDocumentCode();
-		}
-		EventoExperianErrorEntity errorEntity = new EventoExperianErrorEntity(
-				evento.getId(),
-				evento.getQueryId(),
-				evento.getNotificationId(),
-				evento.getOrigenEvento(),
-				evento.getEventType(),
-				eventoProcesadoDto.getEstadoExperian(),
-				eventoProcesadoDto.getSubestadoExperian(),
-				documento,
-				evento.getPayloadJson(),
-				evento.getErrorCode(),
-				evento.getErrorMensaje(),
-				OffsetDateTime.now()
-			);
-		eventoExperianErrorRepository.save(errorEntity);
-		
-		//borrar de tabla viva
+	/**
+	 * eventos con error no recuperable
+	 * @param evento
+	 * @param eventoProcesadoDto
+	 * @param procesado
+	 */
+	@Transactional
+	public void eventoNoProcesadoErrorFuncional (EventoExperianVivoEntity evento, EventoProcesadoDto eventoProcesadoDto, String procesado) {
+		//mover a historico
+		moverEventoProcesadoToHist(evento, eventoProcesadoDto, procesado);
+		//borrar de cola de trabajo
 		borraEventoDeColaWorker(evento.getId());
 			
 	}

@@ -41,10 +41,10 @@ public class DocumentosSolicitudHistEntity {
     @Column(name = "DOCUMENT_JSON")
     private String documentJson;
     
-    @Column(name = "DESCARGADO_PDF" , length = 6)
-    private String descargadoPdf;
+    @Column(name = "DOCUMENT_PDF" , length = 20)
+    private String documentPdf;
     
-    @Column(name = "ERROR_CODE", length = 50)
+    @Column(name = "ERROR_CODE", length = 100)
     private String errorCode;
 
     @Column(name = "ERROR_MENSAJE", length = 4000)
@@ -56,15 +56,4 @@ public class DocumentosSolicitudHistEntity {
     @Column(name = "FECHA_CIERRE", nullable = false)
     private OffsetDateTime fechaCierre;
 
-    @PrePersist
-    public void prePersist() {
-        if (fechaCierre == null) {
-            fechaCierre = OffsetDateTime.now();
-        }
-    }
-    
-    @PreUpdate
-    public void preUpdate() {
-        fechaCierre = OffsetDateTime.now();
-    }
 }

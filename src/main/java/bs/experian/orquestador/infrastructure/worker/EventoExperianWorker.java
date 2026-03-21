@@ -54,7 +54,8 @@ public class EventoExperianWorker {
     		if (null == eventoProcesado) {
     			eventoProcesado = informarEventoDto(evento);
     		}
-    		evento.setErrorCode(e.getMessage());
+    		String errorCode = e.getMessage().substring(0, Math.min(e.getMessage().length(), 49));
+    		evento.setErrorCode(errorCode);
     		evento.setErrorMensaje(OrquestadorUtils.stackTraceToString(e, 20) );
     		eventoApplicationService.eventoNoProcesadoErrorFuncional(evento, eventoProcesado);
 		}catch (Exception e) {

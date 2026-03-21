@@ -1,7 +1,6 @@
 package bs.experian.orquestador.application.eventos;
 
-import static bs.experian.orquestador.domain.constants.ExperianConstants.EVENT_DOCUMENTO_DESCARGADO;
-import static bs.experian.orquestador.domain.constants.ExperianConstants.STATUS_DOCUMENTO_DESCARGADO;
+import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
 
 import org.springframework.stereotype.Component;
 
@@ -15,16 +14,14 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class ProcesadorDocumentoDescargado implements EventoProcesador {
-	
+public class ProcesadorDocumentoCustodiado implements EventoProcesador {
 	private final ObjectMapper objectMapper;
 	private final DocumentosApplicagtionService documentosApplicagtionService;
 	
-
 	@Override
 	public boolean aplica(EventoProcesadoDto evento) {
-		return EVENT_DOCUMENTO_DESCARGADO.equals(evento.getEventType())
-	            && STATUS_DOCUMENTO_DESCARGADO.equals(evento.getEstadoExperian());
+		return EVENT_TYPE_CUSTODIA.equals(evento.getEventType())
+	            && STATUS_CUSTODIA.equals(evento.getEstadoExperian());
 	}
 
 	@Override
@@ -33,19 +30,18 @@ public class ProcesadorDocumentoDescargado implements EventoProcesador {
 		JsonNode eventData = root.path("eventData");
 		
 		String codeDocument = eventData.path("documentCode").asText();
-		String pdfDocument = eventData.path("pdfDocument").asText();
-		String jsonDocument = eventData.path("jsonDocument").asText();
+		String estadoCustodia = eventData.path("substatus").asText();
 		
 		evento.setDocumento(
 				EventoProcesadoDto.Documento.builder()
 						.documentCode(codeDocument)
-						.pdfDocument(pdfDocument)
-						.jsonDocument(jsonDocument)
+						.pdfDocument(estadoCustodia)
 						.build()
 			);
 		
 		documentosApplicagtionService.actualizarEstadoDocumento(evento);
 		evento.setProcesado(true);
+		
 	}
 
 }

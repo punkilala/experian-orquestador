@@ -32,7 +32,10 @@ public class DocumentosSolicitudEntity {
     @Id
     @Column(name = "DOCUMENT_CODE", length = 100, nullable = false)
     private String documentCode;
-
+    
+    @Column(name = "NOTIFICATION_ID", length = 100, nullable = false)
+    private String notificationId;
+    
     @Column(name = "ESTADO_DOCUMENTO", length = 30, nullable = false)
     private String estadoDocumento;
 
@@ -40,25 +43,13 @@ public class DocumentosSolicitudEntity {
     @Column(name = "DOCUMENT_JSON")
     private String documentJson;
     
-    @Column(name = "DESCARGADO_PDF" , length = 6)
-    private String descargadoPdf;
+    @Column(name = "DOCUMENT_PDF" , length = 20)
+    private String documentPdf;
 
     @Column(name = "FECHA_ALTA", nullable = false, updatable = false)
     private OffsetDateTime fechaAlta;
 
     @Column(name = "FECHA_ULTIMA_ACT")
     private OffsetDateTime fechaUltimaActualizacion;
-
-    @PrePersist
-    public void prePersist() {
-        if (fechaAlta == null) {
-            fechaAlta = OffsetDateTime.now();
-        }
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        fechaUltimaActualizacion = OffsetDateTime.now();
-    }
 
 }
