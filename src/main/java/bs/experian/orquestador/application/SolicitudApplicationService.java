@@ -3,7 +3,8 @@ package bs.experian.orquestador.application;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
+import bs.experian.orquestador.application.model.evento.EventoDto;
+import bs.experian.orquestador.application.model.evento.PayLoadDto;
 import bs.experian.orquestador.infrastructure.dto.integracion.SolicitudNuevaRequest;
 import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudNuevaResponse;
 import bs.experian.orquestador.infrastructure.persistence.solicitud.ProcesadorSolicitudesRepository;
@@ -39,8 +40,8 @@ public class SolicitudApplicationService {
 	 * @param dto
 	 */
 	@Transactional
-	public void actualizarEstadoSolicitud (String queryId, EventoProcesadoDto dto) {
-		operacionesConSolicitudesRepository.actualizarEstadoSolicitud(queryId, dto);
+	public void actualizarEstadoSolicitud (EventoDto evento) {
+		operacionesConSolicitudesRepository.actualizarEstadoSolicitud(evento);
 		
 	}
 }

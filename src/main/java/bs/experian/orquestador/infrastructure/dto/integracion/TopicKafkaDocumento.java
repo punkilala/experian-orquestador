@@ -1,4 +1,4 @@
-package bs.experian.orquestador.infrastructure.dto.cutodia;
+package bs.experian.orquestador.infrastructure.dto.integracion;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,8 +9,13 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CustodiaDocumentoRequest {
+public class TopicKafkaDocumento {
+	
 	private String queryId;
-	private String documentCode;
 	private String notificationId;
+	private String documentCode;
+	private String pdfUrl;
+	private String jsonUrl;
+	
+
 }

@@ -30,10 +30,10 @@ public class OrquestadorController {
 		
 	}
 	
-	@PostMapping("/eventos")
-	public ResponseEntity<Void>recepcionEventos (@Valid @RequestBody EventoDto request){
-		eventoApplicationService.recibirEventoExperian(request);
-		return ResponseEntity.ok().build();
-	}
+//	@PostMapping("/eventos")
+//	public ResponseEntity<Void>recepcionEventos (@Valid @RequestBody EventoDto request){
+//		eventoApplicationService.recibirEventoExperian(request);
+//		return ResponseEntity.ok().build();
+//	}
 
 }

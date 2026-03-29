@@ -4,48 +4,39 @@ import static bs.experian.orquestador.domain.constants.ExperianConstants.EVENT_D
 import static bs.experian.orquestador.domain.constants.ExperianConstants.STATUS_DOCUMENTO_DESCARGADO;
 
 import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import bs.experian.orquestador.application.DocumentosApplicagtionService;
-import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
+import bs.experian.orquestador.application.model.evento.EventoDto;
+import bs.experian.orquestador.infrastructure.dto.integracion.TopicKafkaDocumento;
+import bs.experian.orquestador.infrastructure.kafka.produces.KafkaProduceOrdenDocumento;
+import bs.experian.orquestador.infrastructure.persistence.documentos.ProcesadorDocumentoRepository;
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class ProcesadorDocumentoDescargado implements EventoProcesador {
+		
+	private final ProcesadorDocumentoRepository procesadorDocumentoRepository;
+	private final KafkaProduceOrdenDocumento kafkaProduceOrdenDocumento;
 	
-	private final ObjectMapper objectMapper;
-	private final DocumentosApplicagtionService documentosApplicagtionService;
-	
-
 	@Override
-	public boolean aplica(EventoProcesadoDto evento) {
+	public boolean aplica(EventoDto evento) {
 		return EVENT_DOCUMENTO_DESCARGADO.equals(evento.getEventType())
-	            && STATUS_DOCUMENTO_DESCARGADO.equals(evento.getEstadoExperian());
+	            && STATUS_DOCUMENTO_DESCARGADO.equals(evento.getEventData().getStatus());
 	}
 
 	@Override
-	public void procesar(EventoProcesadoDto evento) throws JsonProcessingException {
-		JsonNode root = objectMapper.readTree(evento.getPayloadJson());
-		JsonNode eventData = root.path("eventData");
-		
-		String codeDocument = eventData.path("documentCode").asText();
-		String pdfDocument = eventData.path("pdfDocument").asText();
-		String jsonDocument = eventData.path("jsonDocument").asText();
-		
-		evento.setDocumento(
-				EventoProcesadoDto.Documento.builder()
-						.documentCode(codeDocument)
-						.pdfDocument(pdfDocument)
-						.jsonDocument(jsonDocument)
-						.build()
-			);
-		
-		documentosApplicagtionService.actualizarEstadoDocumento(evento);
-		evento.setProcesado(true);
+	public void procesar(EventoDto evento) {
+		evento.getEventData().setOrigen("INTEGRACION");
+		//actualizar bdd estado documento
+		procesadorDocumentoRepository.actualizarResultDocumentoSolicitud(evento);
+		//PUBLICA TOPIC PTE_CUSTODIA
+		if("PTE_CUSTODIA".equals(evento.getEventData().getPdfEstado())) {
+			TopicKafkaDocumento mensaje = new TopicKafkaDocumento();
+			mensaje.setQueryId(evento.getQueryId());
+			mensaje.setNotificationId(evento.getNotificationId());
+			mensaje.setDocumentCode(evento.getEventData().getDocumentCode());
+			
+			kafkaProduceOrdenDocumento.publicar(mensaje, "documento.custodia.orden");
+		}
 	}
 
 }

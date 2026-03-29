@@ -1,7 +1,5 @@
 package bs.experian.orquestador.application.model.evento;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -20,12 +18,11 @@ public class EventoDto {
 	@NotBlank (message = "campo requerido")
 	private String notificationId;
 	
-	private String origen;
-	
 	@NotBlank (message = "campo requerido")
 	private String eventType;
 	
 	@NotNull (message = "campo requerido")
-	private JsonNode eventData;
+	private PayLoadDto eventData;
+	
 
 }

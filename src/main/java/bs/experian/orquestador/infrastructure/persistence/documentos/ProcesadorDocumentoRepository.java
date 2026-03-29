@@ -1,17 +1,13 @@
 package bs.experian.orquestador.infrastructure.persistence.documentos;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
-import jakarta.persistence.Query;
+import bs.experian.orquestador.application.model.evento.EventoDto;
+import bs.experian.orquestador.infrastructure.exceptions.NonRetryableProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,93 +20,75 @@ public class ProcesadorDocumentoRepository {
 	
 	private final DocumentosSolicitudHistRepository documentosHistSolicitudesRepository;
 	private final DocumentosSolicitudRespository documentosSolicitudesRespository;
+	private final DocumentoPendienteCustodiaRepository documentoPendienteCustodiaRepository;
 	
 	
 	/**
 	 * Registrar documento como pendiente descargar
 	 * @param dto
 	 */
-	public void registrarDocumentoPteDescarga (EventoProcesadoDto dto) {
-		DocumentosSolicitudPK pk = new DocumentosSolicitudPK(dto.getQueryId(), dto.getDocumento().getDocumentCode());
+	public void registrarDocumentoPteDescarga (EventoDto evento) {
+		DocumentosSolicitudPK pk = new DocumentosSolicitudPK(evento.getQueryId(), evento.getEventData().getDocumentCode());
 	    DocumentosSolicitudEntity entity =
 	            documentosSolicitudesRespository.findById(pk)
 	                    .orElseGet(() -> DocumentosSolicitudEntity.builder()
-	                            .queryId(dto.getQueryId())
-	                            .documentCode(dto.getDocumento().getDocumentCode())
+	                            .queryId(evento.getQueryId())
 	                            .fechaAlta(OffsetDateTime.now())
 	                            .build());
 	    
-	    // si no hay duplicados de notificationId
-	    if (!Objects.equals(dto.getNotificationId(), entity.getNotificationId())) {
+	    // si es la primera vez que se trata el documento de una solicitud
+	    if (!Objects.equals(evento.getEventData().getDocumentCode(), entity.getDocumentCode())) {
 
-	        entity.setNotificationId(dto.getNotificationId());
+	        entity.setNotificationId(evento.getNotificationId());
+	        entity.setDocumentCode(evento.getEventData().getDocumentCode());
 	        entity.setDocumentJson(null);
 	        entity.setDocumentPdf(null);
 	        entity.setEstadoDocumento(DOC_PTE_DESCARGA);
 
 	        documentosSolicitudesRespository.save(entity);
 	    }else {
-	    	//mismo queryId para el mismo documento con misma notificacionId
-	    	throw new DataIntegrityViolationException("DUPLICADO");
+	    	//documento de la solicitud ya tratado
+	    	throw new NonRetryableProcessingException("DOCUMENTO DUPLICADO", null );
 	    }
 	}
 	
 	/**
-	 * Pasar a historico un documento que experian dice que no lo ha obtenido
-	 * @param dto
+	 * Actualizar estado documenton despues del proceso de descarga y custodia
+	 * @param evento
 	 */
 	@Transactional
-	public void registrarDocEnHistExperianNoObtenido(EventoProcesadoDto dto) {
-
-        DocumentosSolicitudHistEntity entity =
-                DocumentosSolicitudHistEntity.builder()
-                        .queryId(dto.getQueryId())
-                        .documentCode(dto.getDocumento().getDocumentCode())
-                        .errorCode(dto.getDocumento().getErrorCode())
-                        .errorMensaje(dto.getDocumento().getErrorMessage())
-                        .fechaAlta(OffsetDateTime.now(ZoneOffset.UTC))
-                        .fechaCierre(OffsetDateTime.now())
-                        .build();
-
-        documentosHistSolicitudesRepository.save(entity);
-    }
-	
-	/**
-	 * Actualizar estado documento por resultado de su descargar o su  custodia
-	 * @param dto
-	 */
-	
-	public void actualizarEstadoDocumento (EventoProcesadoDto dto) {
+	public void actualizarResultDocumentoSolicitud (EventoDto evento) {
 		
-		Optional <DocumentosSolicitudEntity> entityOpt = documentosSolicitudesRespository.findById(
-					new DocumentosSolicitudPK(dto.getQueryId(), dto.getDocumento().getDocumentCode()));
+		//obtener el documento de la tabla de solicitudes
+		DocumentosSolicitudEntity entity = documentosSolicitudesRespository.findById(
+					new DocumentosSolicitudPK(evento.getQueryId(), evento.getEventData().getDocumentCode()))
+				.orElseThrow(()->new  NonRetryableProcessingException("No se encuentra documento descargado en tabla SOLICITUDES", null));
 		
-		if (entityOpt.isEmpty()) {
-		    log.error("ERR OQUESTADOR-EXPERIAN Documento no encontrado en solicitudes. queryId={}, documentCode={}",
-		        dto.getQueryId(),
-		        dto.getDocumento().getDocumentCode()
-		    );
-		    return;
+		//para descarga y custodia doucmentos
+		entity.setFechaUltimaActualizacion(OffsetDateTime.now());
+		
+		if("DocumentoDescargado".equals(evento.getEventType())) {
+			entity.setEstadoDocumento(evento.getEventData().getSubstatus());
+			entity.setDocumentPdf(evento.getEventData().getPdfEstado());
+		}else {
+			entity.setDocumentPdf(evento.getEventData().getSubstatus());
 		}
 		
-		DocumentosSolicitudEntity entity = entityOpt.get();
-
-		if("DocumentoDescargado".equals(dto.getEventType())) {
-			entity.setEstadoDocumento(dto.getSubestadoExperian());
-			entity.setDocumentJson(dto.getDocumento().getJsonDocument());
+		if ("DESCARGADO".equals(evento.getEventData().getJsonEstado())){
+			//tabla documentos temporales
+			DocumentoPendienteCustodiaEntity entityTpm = documentoPendienteCustodiaRepository.findById(
+						new DocumentoPendienteCustodiaPK(evento.getQueryId(), evento.getEventData().getDocumentCode()))
+					.orElseThrow(()->new  NonRetryableProcessingException("No se encuentra documento descargado en tabla TEMPORAL", null));
+			
+			entity.setDocumentJson(entityTpm.getJsonDocument());
 		}
-	    entity.setFechaUltimaActualizacion(OffsetDateTime.now());	
-    	entity.setDocumentPdf(dto.getDocumento().getPdfDocument());
-	    
-	   	documentosSolicitudesRespository.save(entity);
-					
-	}
-	
-	public void buscarNotificacionDuplicadaEnDoc(String queryId, String notificationId) {
 		
-		if(documentosSolicitudesRespository.existsByQueryIdAndNotificationId(queryId, notificationId)) {
-			throw new DataIntegrityViolationException("DUPLICADO");
+		documentosSolicitudesRespository.save(entity);
+		
+		if( "NO_DESCARGADO".equals(evento.getEventData().getPdfEstado()) || "CustodiaDocumento".equals(evento.getEventType())) {
+			documentoPendienteCustodiaRepository.deleteById(
+					new DocumentoPendienteCustodiaPK(evento.getQueryId(), evento.getEventData().getDocumentCode())
+			);
 		}
-	}
-	
+	}	
 }

@@ -5,13 +5,10 @@ import static bs.experian.orquestador.domain.constants.ExperianConstants.STATUS_
 import static bs.experian.orquestador.domain.constants.ExperianConstants.SUBSTATUS_NEW_DOCUMENT_AVAILABLE;
 
 import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import bs.experian.orquestador.application.DocumentosApplicagtionService;
-import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
+import bs.experian.orquestador.application.model.evento.EventoDto;
+import bs.experian.orquestador.infrastructure.dto.integracion.TopicKafkaDocumento;
+import bs.experian.orquestador.infrastructure.kafka.produces.KafkaProduceOrdenDocumento;
+import bs.experian.orquestador.infrastructure.persistence.documentos.ProcesadorDocumentoRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -23,36 +20,33 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProcesadorNewAvailableDocument implements EventoProcesador {
 	
-	private final DocumentosApplicagtionService documentosApplicagtionService;
-	private final ObjectMapper objectMapper;
+	private final KafkaProduceOrdenDocumento kafkaProduceOrdenDocumento;
+	private final ProcesadorDocumentoRepository procesadorDocumentoRepository;
 
 	@Override
-	public boolean aplica(EventoProcesadoDto evento) {
+	public boolean aplica(EventoDto evento) {
 		
 		return EVENT_NEW_DOCUMENT_AVAILABLE.equals(evento.getEventType())
-	            && STATUS_PROCESSING.equals(evento.getEstadoExperian())
-	            && (SUBSTATUS_NEW_DOCUMENT_AVAILABLE.equals(evento.getSubestadoExperian()));
+	            && STATUS_PROCESSING.equals(evento.getEventData().getStatus())
+	            && (SUBSTATUS_NEW_DOCUMENT_AVAILABLE.equals(evento.getEventData().getSubstatus()));
 	}
 
 	@Override
-	public void procesar(EventoProcesadoDto evento) throws JsonProcessingException {
-		JsonNode root = objectMapper.readTree(evento.getPayloadJson());
-		JsonNode eventData = root.path("eventData");
-		
-		String codeDocument = eventData.path("documentCode").asText();
-		String pdfDocumentUrl = eventData.path("pdfDocumentUrl").asText();
-		String jsonDocumentUrl = eventData.path("jsonDocumentUrl").asText();
-		evento.setDocumento(
-				EventoProcesadoDto.Documento.builder()
-						.documentCode(codeDocument)
-						.pdfDocumentUrl(pdfDocumentUrl)
-						.jsonDocumentUrl(jsonDocumentUrl)
-						.build()
-				);
+	public void procesar(EventoDto evento)  {
 		
 		//registrar documento en la tabla DocumentosSolicitdes y llamar a integracion pdara pasarselo
-		documentosApplicagtionService.registrarDocumentoPteDescarga(evento);
-		evento.setProcesado(true);
+		TopicKafkaDocumento mensaje = new TopicKafkaDocumento();
+		mensaje.setQueryId(evento.getQueryId());
+		mensaje.setNotificationId(evento.getNotificationId());
+		mensaje.setDocumentCode(evento.getEventData().getDocumentCode());
+		mensaje.setJsonUrl(evento.getEventData().getJsonDocumentUrl());
+		mensaje.setPdfUrl(evento.getEventData().getPdfDocumentUrl());
+		
+		//registrar en bdd el nuevo documento a descargar
+		procesadorDocumentoRepository.registrarDocumentoPteDescarga(evento);
+		//mandar mensaje kafka para que integracion lo intercepte y descarge documentos
+		kafkaProduceOrdenDocumento.publicar(mensaje, "documento.descarga.orden");
+		
 	}
 
 }

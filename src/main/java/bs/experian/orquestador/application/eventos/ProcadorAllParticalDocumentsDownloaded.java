@@ -6,23 +6,23 @@ import static bs.experian.orquestador.domain.constants.ExperianConstants.SUBSTAT
 
 import org.springframework.stereotype.Component;
 
-import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
+import bs.experian.orquestador.application.model.evento.EventoDto;
 
 @Component
 public class ProcadorAllParticalDocumentsDownloaded implements EventoProcesador {
 
 	@Override
-	public boolean aplica(EventoProcesadoDto evento) {
+	public boolean aplica(EventoDto evento) {
 		
 		return EVENT_STATUS_CHANGED.equals(evento.getEventType())
-	            && STATUS_SUCCESS.equals(evento.getEstadoExperian())
-	            && (SUBSTATUS_ALL_DOCUMENTS_DOWNLOADED.equals(evento.getSubestadoExperian())
-	                || SUBSTATUS_ALL_DOCUMENTS_DOWNLOADED.equals(evento.getSubestadoExperian()));
+	            && STATUS_SUCCESS.equals(evento.getEventData().getStatus())
+	            && (SUBSTATUS_ALL_DOCUMENTS_DOWNLOADED.equals(evento.getEventData().getSubstatus())
+	                || SUBSTATUS_ALL_DOCUMENTS_DOWNLOADED.equals(evento.getEventData().getSubstatus()));
 	}
 
 	@Override
-	public void procesar(EventoProcesadoDto evento) {
-		// TODO Auto-generated method stub
+	public void procesar(EventoDto evento) {
+
 
 	}
 

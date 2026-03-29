@@ -1,17 +1,17 @@
 package bs.experian.orquestador.infrastructure.persistence.solicitud;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 import org.springframework.stereotype.Repository;
 
-import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
+import bs.experian.orquestador.application.model.evento.EventoDto;
 import bs.experian.orquestador.domain.enums.DomainEnum;
 import bs.experian.orquestador.domain.enums.DomainEnum.EstadoInterno;
 import bs.experian.orquestador.infrastructure.dto.integracion.SolicitudNuevaRequest;
 import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudNuevaResponse;
 import lombok.RequiredArgsConstructor;
+import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
 
 @Repository
 @RequiredArgsConstructor
@@ -54,20 +54,29 @@ public class ProcesadorSolicitudesRepository {
 	 * @param queryId
 	 * @param dto
 	 */
-	public void actualizarEstadoSolicitud(String queryId, EventoProcesadoDto dto) {
+	public void actualizarEstadoSolicitud(EventoDto evento) {
 		
-		SolicitudEntity solicitudEntity = solicitudRepository.findById(queryId)
+		SolicitudEntity solicitudEntity = solicitudRepository.findById(evento.getQueryId())
 				.orElseThrow(() ->
-					new IllegalStateException("Solicitud no encontrada para queryId: " + queryId));
+					new IllegalStateException("Solicitud no encontrada para queryId: " + evento.getQueryId()));
 		
-		solicitudEntity.setEstadoExperian(dto.getEstadoExperian());
-		solicitudEntity.setSubEstadoExperian(dto.getSubestadoExperian());
+		//solo los eventos de Experian cambian el estado
+		if(evento.getEventData().getOrigen() == null) {
+			solicitudEntity.setEstadoExperian(evento.getEventData().getStatus());
+			solicitudEntity.setSubEstadoExperian(evento.getEventData().getSubstatus());
+		}
 		
 		if (EstadoInterno.CREADA.equals(solicitudEntity.getEstadoInterno())) {
 		solicitudEntity.setEstadoInterno(EstadoInterno.EN_PROCESO);
 		}
 		
+		if(EstadoInterno.EN_PROCESO.equals(solicitudEntity.getEstadoInterno()) && DOC_PTE_CUSTODIA.equals(evento.getEventData().getPdfEstado())) {
+			solicitudEntity.setEstadoInterno(EstadoInterno.CUSTODIA_EN_PROCESO);
+		}
+		
 		solicitudEntity.setFechaUltimaActualizacion(OffsetDateTime.now(ZoneOffset.UTC));
+		
+		solicitudRepository.save(solicitudEntity);
 			 
 	}
 		

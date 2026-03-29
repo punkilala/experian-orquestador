@@ -1,13 +1,14 @@
 package bs.experian.orquestador.application.eventos;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 
-import bs.experian.orquestador.application.model.evento.EventoProcesadoDto;
+import bs.experian.orquestador.application.model.evento.EventoDto;
+
+
 
 public interface EventoProcesador {
 	
-	boolean aplica(EventoProcesadoDto evento);
+	boolean aplica(EventoDto evento);
 
-    void procesar(EventoProcesadoDto evento) throws JsonProcessingException;
+    void procesar(EventoDto evento);
 
 }

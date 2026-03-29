@@ -33,8 +33,8 @@ public final class ExperianConstants {
     public static final String DOC_PTE_DESCARGA = "PTE_DESCARGA";
     public static final String DOC_PTE_CUSTODIA = "PTE_CUSTODIA";
     
-    public static final String EVENT_TYPE_CUSTODIA = "Custodia_Documento";
-    public static final String STATUS_CUSTODIA = "documento_procesado";
+    public static final String EVENT_TYPE_CUSTODIA = "CustodiaDocumento";
+    public static final String STATUS_CUSTODIA = "custodia_documento";
     
     
     
