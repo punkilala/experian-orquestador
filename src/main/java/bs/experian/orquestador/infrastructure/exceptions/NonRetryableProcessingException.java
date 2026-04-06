@@ -7,4 +7,12 @@ public class NonRetryableProcessingException extends RuntimeException {
 	public NonRetryableProcessingException(String message, Throwable cause) {
         super(message, cause);
     }
+	
+	public NonRetryableProcessingException(String message) {
+	        super(message);
+    }
+	
+    public NonRetryableProcessingException(String message, String detail) {
+        super(message + " - " + detail);
+    }
 }

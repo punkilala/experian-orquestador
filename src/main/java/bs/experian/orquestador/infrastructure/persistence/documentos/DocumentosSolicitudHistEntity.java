@@ -33,6 +33,9 @@ public class DocumentosSolicitudHistEntity {
     @Id
     @Column(name = "DOCUMENT_CODE", length = 100, nullable = false)
     private String documentCode;
+    
+    @Column(name = "NOTIFICATION_ID", length = 100, nullable = false)
+    private String notificationId;
 
     @Column(name = "ESTADO_DOCUMENTO", length = 30, nullable = false)
     private String estadoDocumento;
@@ -43,17 +46,21 @@ public class DocumentosSolicitudHistEntity {
     
     @Column(name = "DOCUMENT_PDF" , length = 20)
     private String documentPdf;
-    
-    @Column(name = "ERROR_CODE", length = 100)
-    private String errorCode;
-
-    @Column(name = "ERROR_MENSAJE", length = 4000)
-    private String errorMensaje;
 
     @Column(name = "FECHA_ALTA", nullable = false)
     private OffsetDateTime fechaAlta;
+    
+    @Column(name = "FECHA_ULTIMA_ACT")
+    private OffsetDateTime fechaUltimaActualizacion;
 
     @Column(name = "FECHA_CIERRE", nullable = false)
     private OffsetDateTime fechaCierre;
+    
+    @PrePersist
+    private void prePersist() {
+        if (this.fechaCierre == null) {
+            this.fechaCierre = OffsetDateTime.now();
+        }
+    }
 
 }

@@ -63,7 +63,7 @@ public class EventosExperianHistEntity {
     @Column(name = "RESULTADO_PROCESO", nullable = false, length = 30)
     private String resultadoProceso;
 
-    @Column(name = "ERROR_CODE", length = 50)
+    @Column(name = "ERROR_CODE", length = 1000)
     private String errorCode;
 
     @Lob

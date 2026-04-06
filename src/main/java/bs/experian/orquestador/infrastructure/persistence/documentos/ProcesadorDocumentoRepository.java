@@ -1,6 +1,7 @@
 package bs.experian.orquestador.infrastructure.persistence.documentos;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 
 import org.springframework.stereotype.Repository;
@@ -18,7 +19,7 @@ import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
 @Slf4j
 public class ProcesadorDocumentoRepository {
 	
-	private final DocumentosSolicitudHistRepository documentosHistSolicitudesRepository;
+	private final DocumentosSolicitudHistRepository documentosSolicitudHistRepository;
 	private final DocumentosSolicitudRespository documentosSolicitudesRespository;
 	private final DocumentoPendienteCustodiaRepository documentoPendienteCustodiaRepository;
 	
@@ -48,7 +49,8 @@ public class ProcesadorDocumentoRepository {
 	        documentosSolicitudesRespository.save(entity);
 	    }else {
 	    	//documento de la solicitud ya tratado
-	    	throw new NonRetryableProcessingException("DOCUMENTO DUPLICADO", null );
+	    	throw new NonRetryableProcessingException("DOCUMENTO DUPLICADO", "Documento %s ya procesado para solicitud %s"
+	    			.formatted(evento.getEventData().getDocumentCode(), evento.getQueryId()));
 	    }
 	}
 	
@@ -62,7 +64,8 @@ public class ProcesadorDocumentoRepository {
 		//obtener el documento de la tabla de solicitudes
 		DocumentosSolicitudEntity entity = documentosSolicitudesRespository.findById(
 					new DocumentosSolicitudPK(evento.getQueryId(), evento.getEventData().getDocumentCode()))
-				.orElseThrow(()->new  NonRetryableProcessingException("No se encuentra documento descargado en tabla SOLICITUDES", null));
+				.orElseThrow(()->new  NonRetryableProcessingException("DOCUMENTO NO EXISTE ", "No se encuentra documento %s descargado para solicitud %s"
+						.formatted(evento.getEventData().getDocumentCode(), evento.getQueryId())));
 		
 		//para descarga y custodia doucmentos
 		entity.setFechaUltimaActualizacion(OffsetDateTime.now());
@@ -78,7 +81,8 @@ public class ProcesadorDocumentoRepository {
 			//tabla documentos temporales
 			DocumentoPendienteCustodiaEntity entityTpm = documentoPendienteCustodiaRepository.findById(
 						new DocumentoPendienteCustodiaPK(evento.getQueryId(), evento.getEventData().getDocumentCode()))
-					.orElseThrow(()->new  NonRetryableProcessingException("No se encuentra documento descargado en tabla TEMPORAL", null));
+					.orElseThrow(()->new  NonRetryableProcessingException("DOCUMENTO NO EXISTE ", "No se encuentra documento %s descargado para solicitud %s"
+							.formatted(evento.getEventData().getDocumentCode(), evento.getQueryId())));
 			
 			entity.setDocumentJson(entityTpm.getJsonDocument());
 		}
@@ -90,5 +94,45 @@ public class ProcesadorDocumentoRepository {
 					new DocumentoPendienteCustodiaPK(evento.getQueryId(), evento.getEventData().getDocumentCode())
 			);
 		}
-	}	
+	}
+	/**
+	 * Obtener todos los documentos de la solicitud
+	 * @param queryId
+	 */
+	public List<DocumentosSolicitudEntity>  obtenerDocumentosSolicitud (String queryId) {
+		
+		return documentosSolicitudesRespository.findByQueryId(queryId);
+	}
+	
+	public void moverDocumentosAHistorico(String queryId) {
+	    List<DocumentosSolicitudEntity> documentos = documentosSolicitudesRespository.findByQueryId(queryId);
+
+	    if (documentos.isEmpty()) {
+	    	//si no hay documentos que mover a hist, no hacer nada
+	        return;
+	    }
+
+	    List<DocumentosSolicitudHistEntity> historicos = documentos.stream()
+	            .map(this::toHistorico)
+	            .toList();
+
+	    documentosSolicitudHistRepository.saveAll(historicos);
+	    documentosSolicitudesRespository.deleteAllByQueryId(queryId);
+	}
+	
+	private DocumentosSolicitudHistEntity toHistorico(DocumentosSolicitudEntity doc) {
+	    DocumentosSolicitudHistEntity hist = new DocumentosSolicitudHistEntity();
+
+	    hist.setQueryId(doc.getQueryId());
+	    hist.setDocumentCode(doc.getDocumentCode());
+	    hist.setNotificationId(doc.getNotificationId());
+	    hist.setEstadoDocumento(doc.getEstadoDocumento());
+	    hist.setDocumentJson(doc.getDocumentJson());
+	    hist.setDocumentPdf(doc.getDocumentPdf());
+	    hist.setFechaAlta(doc.getFechaAlta());
+	    hist.setFechaUltimaActualizacion(doc.getFechaUltimaActualizacion());
+	    hist.setFechaCierre(OffsetDateTime.now());
+
+	    return hist;
+	}
 }

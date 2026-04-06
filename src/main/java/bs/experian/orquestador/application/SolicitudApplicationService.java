@@ -1,10 +1,8 @@
 package bs.experian.orquestador.application;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import bs.experian.orquestador.application.model.evento.EventoDto;
-import bs.experian.orquestador.application.model.evento.PayLoadDto;
 import bs.experian.orquestador.infrastructure.dto.integracion.SolicitudNuevaRequest;
 import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudNuevaResponse;
 import bs.experian.orquestador.infrastructure.persistence.solicitud.ProcesadorSolicitudesRepository;
@@ -35,13 +33,11 @@ public class SolicitudApplicationService {
 	}
 	
 	/**
-	 * Actualizar estado solicitud al procesar un evento
-	 * @param queryId
-	 * @param dto
+	 * De un evento si existe solicitud o esta ya esta en estado finalizada
+	 * @param evento
 	 */
-	@Transactional
-	public void actualizarEstadoSolicitud (EventoDto evento) {
-		operacionesConSolicitudesRepository.actualizarEstadoSolicitud(evento);
-		
+	public void comprobarSolicitud(EventoDto evento) {
+		operacionesConSolicitudesRepository.comprobarSolicitud(evento);
 	}
+
 }

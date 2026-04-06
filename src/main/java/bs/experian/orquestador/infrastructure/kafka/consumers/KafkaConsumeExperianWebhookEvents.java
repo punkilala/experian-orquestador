@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import bs.experian.orquestador.application.EventoApplicationService;
+import bs.experian.orquestador.application.SolicitudApplicationService;
 import bs.experian.orquestador.application.eventos.EventoProcesador;
 import bs.experian.orquestador.application.model.evento.EventoDto;
 import bs.experian.orquestador.application.model.evento.PayLoadDto;
@@ -37,6 +38,7 @@ public class KafkaConsumeExperianWebhookEvents {
 	private final ObjectMapper objectMapper;
 	private final List<EventoProcesador> procesadores;
 	private final EventoApplicationService eventoApplicationService;
+	private final SolicitudApplicationService solicitudApplicationService;
 	
 	@RetryableTopic(
             attempts = "4", 
@@ -64,6 +66,8 @@ public class KafkaConsumeExperianWebhookEvents {
 
 	        evento = objectMapper.readValue(mensaje, EventoDto.class);
 	        
+	        solicitudApplicationService.comprobarSolicitud(evento);
+	        
 	        JsonNode node = objectMapper.readTree(mensaje);
 	        String jsonBonito = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(node);
 	        evento.getEventData().setPayLoad(jsonBonito);
@@ -79,10 +83,14 @@ public class KafkaConsumeExperianWebhookEvents {
 			}
 			
 			String result = procesado ? "PROCESADO" : "NO_APLICA";
-			eventoApplicationService.finalizarEvento(evento, result, null, null);
+			
+			if(evento.getEventData().isEventoFinal()) {
+				eventoApplicationService.finalizarSolicitud(evento, result);
+			}else {
+				eventoApplicationService.finalizarEvento(evento, result, null, null);
+			}
 			
 		 } catch (JsonProcessingException e) {
-		        log.error("Error deserializando mensaje Experian", e);
 		        eventoApplicationService.finalizarEvento(evento, "ERROR_PROCESAMIENTO", e.getMessage(), stackTraceToString(e, 30));
 		        throw new NonRetryableProcessingException("Mensaje JSON invalido", e);
 		    } catch ( KafkaException e) {
@@ -113,6 +121,8 @@ public class KafkaConsumeExperianWebhookEvents {
         String stacktrace = toStringSafe(exceptionStacktrace);
         
         EventoDto evento = null;
+        
+        log.error("###ERR KafkaConsumeExperianWebhookEvents; ErrorCode %s stacktrace %s".formatted(exceptionMsg, stacktrace));
         
         try {
         	evento = objectMapper.readValue(mensaje, EventoDto.class);

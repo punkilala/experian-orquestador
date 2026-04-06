@@ -21,5 +21,7 @@ public class PayLoadDto {
 	private String pdfEstado;
 	private String jsonDocumentUrl; 
 	private String jsonEstado;
+	private boolean eventoFinal;
+	private String estadoInternoFinal;
 }
 

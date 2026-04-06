@@ -10,14 +10,30 @@ import bs.experian.orquestador.domain.enums.DomainEnum;
 import bs.experian.orquestador.domain.enums.DomainEnum.EstadoInterno;
 import bs.experian.orquestador.infrastructure.dto.integracion.SolicitudNuevaRequest;
 import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudNuevaResponse;
+import bs.experian.orquestador.infrastructure.exceptions.NonRetryableProcessingException;
 import lombok.RequiredArgsConstructor;
 import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
+import static bs.experian.orquestador.domain.enums.DomainEnum.EstadoInterno.*;
 
 @Repository
 @RequiredArgsConstructor
 public class ProcesadorSolicitudesRepository {
 	
 	private final SolicitudRepository solicitudRepository;
+	
+	/**
+	 * De un evento si existe solicitud o esta ya esta en estado finalizada
+	 * @param evento
+	 */
+	public void comprobarSolicitud(EventoDto evento) {
+		 SolicitudEntity entity = solicitudRepository.findById(evento.getQueryId())
+				 .orElseThrow(()-> new NonRetryableProcessingException("Solicitud no existe ", "Solicitud no encontrada para queryId " + evento.getQueryId()));
+		 
+		 if(CANCELADA.equals(entity.getEstadoInterno()) || ERROR.equals(entity.getEstadoInterno())) {
+			 throw new NonRetryableProcessingException("Solicitud en estado final", 
+					 "Solicitud %s en estado final %s ".formatted(evento.getQueryId(), entity.getEstadoInterno()));
+		 }
+	}
 	
 	/**
 	 * crear nueva solicitud a experian
@@ -58,7 +74,7 @@ public class ProcesadorSolicitudesRepository {
 		
 		SolicitudEntity solicitudEntity = solicitudRepository.findById(evento.getQueryId())
 				.orElseThrow(() ->
-					new IllegalStateException("Solicitud no encontrada para queryId: " + evento.getQueryId()));
+				new NonRetryableProcessingException("Solicitud no encontrada", "Solicitud no encontrada para queryId" + evento.getQueryId()));
 		
 		//solo los eventos de Experian cambian el estado
 		if(evento.getEventData().getOrigen() == null) {
@@ -78,6 +94,24 @@ public class ProcesadorSolicitudesRepository {
 		
 		solicitudRepository.save(solicitudEntity);
 			 
+	}
+	
+	/**
+	 * Actualizar solicitud para estados finales
+	 * @param queryId
+	 * @param estadoInterno
+	 */
+	public void actualizarDirectoEstadoSolicitud (String queryId, String estadoExperian, String subEstadoExperian, String estadoInterno) {
+		SolicitudEntity solicitudEntity = solicitudRepository.findById(queryId)
+				.orElseThrow(() ->
+					new NonRetryableProcessingException("Solicitud no encontrada", "Solicitud no encontrada para queryId" + queryId));
+		
+		solicitudEntity.setEstadoExperian(estadoExperian);
+		solicitudEntity.setSubEstadoExperian(subEstadoExperian);
+		solicitudEntity.setEstadoInterno(DomainEnum.EstadoInterno.valueOf(estadoInterno));
+		solicitudEntity.setFechaUltimaActualizacion(OffsetDateTime.now());
+		
+		solicitudRepository.save(solicitudEntity);
 	}
 		
 }

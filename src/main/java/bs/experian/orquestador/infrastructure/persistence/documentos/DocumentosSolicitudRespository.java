@@ -10,5 +10,7 @@ import org.springframework.stereotype.Repository;
 public interface DocumentosSolicitudRespository extends JpaRepository<DocumentosSolicitudEntity, DocumentosSolicitudPK>{
 	Optional<DocumentosSolicitudEntity>findByQueryIdAndDocumentCode(String queryId, String documentCode);
 	 boolean existsByQueryIdAndNotificationId(String queryId, String notificationId);
+	 List<DocumentosSolicitudEntity> findByQueryId(String queryId);
+	 void deleteAllByQueryId(String queryId);
 	
 }
