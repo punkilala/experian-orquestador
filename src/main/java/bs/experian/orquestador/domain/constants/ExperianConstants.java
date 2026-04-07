@@ -1,5 +1,8 @@
 package bs.experian.orquestador.domain.constants;
 
+import java.util.Set;
+
+import bs.experian.orquestador.domain.enums.DomainEnum;
 
 public final class ExperianConstants {
 
@@ -61,6 +64,10 @@ public final class ExperianConstants {
     public static final String EVENT_TYPE_CUSTODIA = "CustodiaDocumento";
     public static final String STATUS_CUSTODIA = "custodia_documento";
     
+    public static final Set<DomainEnum.EstadoInterno> ESTADOS_FINALES_EXPERIAN_KO = Set.of(
+	    		DomainEnum.EstadoInterno.CANCELADA,
+	    	    DomainEnum.EstadoInterno.ERROR
+    		);
     
     
 }

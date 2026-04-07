@@ -29,10 +29,20 @@ public class ProcesadorSolicitudesRepository {
 		 SolicitudEntity entity = solicitudRepository.findById(evento.getQueryId())
 				 .orElseThrow(()-> new NonRetryableProcessingException("Solicitud no existe ", "Solicitud no encontrada para queryId " + evento.getQueryId()));
 		 
-		 if(CANCELADA.equals(entity.getEstadoInterno()) || ERROR.equals(entity.getEstadoInterno())) {
+		 if(ESTADOS_FINALES_EXPERIAN_KO.contains(entity.getEstadoInterno())) {
 			 throw new NonRetryableProcessingException("Solicitud en estado final", 
 					 "Solicitud %s en estado final %s ".formatted(evento.getQueryId(), entity.getEstadoInterno()));
 		 }
+	}
+	
+	/**
+	 * obtener una solicitud por su pk
+	 * @param queryId
+	 * @return
+	 */
+	public SolicitudEntity getSolicitud(String queryId) {
+		return solicitudRepository.findById(queryId)
+				 .orElse(null);
 	}
 	
 	/**
@@ -76,23 +86,29 @@ public class ProcesadorSolicitudesRepository {
 				.orElseThrow(() ->
 				new NonRetryableProcessingException("Solicitud no encontrada", "Solicitud no encontrada para queryId" + evento.getQueryId()));
 		
+		boolean cambio = false;
 		//solo los eventos de Experian cambian el estado
-		if(evento.getEventData().getOrigen() == null) {
+		if(evento.getEventData().getOrigen() == null && ! STATUS_SUCCESS.equals(solicitudEntity.getEstadoExperian())) {
 			solicitudEntity.setEstadoExperian(evento.getEventData().getStatus());
 			solicitudEntity.setSubEstadoExperian(evento.getEventData().getSubstatus());
+			cambio = true;
 		}
 		
 		if (EstadoInterno.CREADA.equals(solicitudEntity.getEstadoInterno())) {
-		solicitudEntity.setEstadoInterno(EstadoInterno.EN_PROCESO);
+			solicitudEntity.setEstadoInterno(EstadoInterno.EN_PROCESO);
+			cambio = true;
 		}
 		
 		if(EstadoInterno.EN_PROCESO.equals(solicitudEntity.getEstadoInterno()) && DOC_PTE_CUSTODIA.equals(evento.getEventData().getPdfEstado())) {
 			solicitudEntity.setEstadoInterno(EstadoInterno.CUSTODIA_EN_PROCESO);
+			cambio = true;
 		}
 		
-		solicitudEntity.setFechaUltimaActualizacion(OffsetDateTime.now(ZoneOffset.UTC));
-		
-		solicitudRepository.save(solicitudEntity);
+		if(cambio) {
+			solicitudEntity.setFechaUltimaActualizacion(OffsetDateTime.now());
+			
+			solicitudRepository.save(solicitudEntity);
+		}
 			 
 	}
 	

@@ -6,6 +6,7 @@ import bs.experian.orquestador.application.model.evento.EventoDto;
 import bs.experian.orquestador.infrastructure.dto.integracion.SolicitudNuevaRequest;
 import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudNuevaResponse;
 import bs.experian.orquestador.infrastructure.persistence.solicitud.ProcesadorSolicitudesRepository;
+import bs.experian.orquestador.infrastructure.persistence.solicitud.SolicitudEntity;
 import bs.experian.orquestador.infrastructure.webclient.NuevaSolicitudClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,5 +40,13 @@ public class SolicitudApplicationService {
 	public void comprobarSolicitud(EventoDto evento) {
 		operacionesConSolicitudesRepository.comprobarSolicitud(evento);
 	}
-
+	
+	/**
+	 * obtener una solicitud por su pk
+	 * @param queryId
+	 * @return
+	 */
+	public SolicitudEntity getSolicitud(String queryId) {
+		return operacionesConSolicitudesRepository.getSolicitud(queryId);
+	}
 }
