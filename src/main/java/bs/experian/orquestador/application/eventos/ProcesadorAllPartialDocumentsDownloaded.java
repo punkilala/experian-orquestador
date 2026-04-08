@@ -47,10 +47,10 @@ public class ProcesadorAllPartialDocumentsDownloaded implements EventoProcesador
 			return;
 		}
 		
-		String result = "";
+		String result = null;
 		
 		boolean hayKo = docs.stream().anyMatch(doc->
-			DOC_CUSTODIA_KO.equals(doc.getDocumentPdf()));
+			!DOC_CUSTODIA_OK.equals(doc.getDocumentPdf()));
 		boolean hayOk = docs.stream().anyMatch(doc->
 		DOC_CUSTODIA_OK.equals(doc.getDocumentPdf()));
 		

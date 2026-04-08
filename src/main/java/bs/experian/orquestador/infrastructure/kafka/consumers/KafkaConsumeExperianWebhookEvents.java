@@ -82,7 +82,7 @@ public class KafkaConsumeExperianWebhookEvents {
 				}
 			}
 			
-			String result = procesado ? "PROCESADO" : "NO_APLICA";
+			String result = procesado ? "PROCESADO" : "NO_ACCION";
 			
 			if(evento.getEventData().isEventoFinal()) {
 				eventoApplicationService.finalizarSolicitud(evento, result);
@@ -94,7 +94,7 @@ public class KafkaConsumeExperianWebhookEvents {
 		        eventoApplicationService.finalizarEvento(evento, "ERROR_PROCESAMIENTO", e.getMessage(), stackTraceToString(e, 30));
 		        throw new NonRetryableProcessingException("Mensaje JSON invalido", e);
 		    } catch ( KafkaException e) {
-		        log.error("Error Kafka procesando evento Experian", e);
+		        log.error("###ERR KafkaConsumeExperianWebhookEvents: Error Kafka procesando evento Experian", e);
 		        eventoApplicationService.finalizarEvento(evento, "ERROR_PROCESAMIENTO", e.getMessage(), stackTraceToString(e, 30));
 		        throw new RetryableProcessingException("Error Kafka procesando evento Experian", e);
 		    }catch (RetryableProcessingException | NonRetryableProcessingException e) {
@@ -104,7 +104,7 @@ public class KafkaConsumeExperianWebhookEvents {
 		        throw e;
 		    } catch (Exception e) {
 		    	eventoApplicationService.finalizarEvento(evento, "ERROR_PROCESAMIENTO", e.getMessage(), stackTraceToString(e, 30));
-		        log.error("Error inesperado procesando evento Experian", e);
+		        log.error("###ERR KafkaConsumeExperianWebhookEvents: inesperado procesando evento Experian", stackTraceToString(e, 30));
 		        throw new RetryableProcessingException("Error inesperado procesando evento Experian", e);
 		    }
 		
@@ -122,7 +122,7 @@ public class KafkaConsumeExperianWebhookEvents {
         
         EventoDto evento = null;
         
-        log.error("###ERR KafkaConsumeExperianWebhookEvents; ErrorCode %s stacktrace %s".formatted(exceptionMsg, stacktrace));
+        log.error("###ERR @DLT KafkaConsumeExperianWebhookEvents; ErrorCode %s stacktrace %s".formatted(exceptionMsg, stacktrace));
         
         try {
         	evento = objectMapper.readValue(mensaje, EventoDto.class);

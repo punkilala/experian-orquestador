@@ -1,7 +1,6 @@
 package bs.experian.orquestador.infrastructure.persistence.solicitud;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 import org.springframework.stereotype.Repository;
 
@@ -13,7 +12,6 @@ import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudNuevaResp
 import bs.experian.orquestador.infrastructure.exceptions.NonRetryableProcessingException;
 import lombok.RequiredArgsConstructor;
 import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
-import static bs.experian.orquestador.domain.enums.DomainEnum.EstadoInterno.*;
 
 @Repository
 @RequiredArgsConstructor
@@ -122,9 +120,9 @@ public class ProcesadorSolicitudesRepository {
 				.orElseThrow(() ->
 					new NonRetryableProcessingException("Solicitud no encontrada", "Solicitud no encontrada para queryId" + queryId));
 		
-		solicitudEntity.setEstadoExperian(estadoExperian);
-		solicitudEntity.setSubEstadoExperian(subEstadoExperian);
-		solicitudEntity.setEstadoInterno(DomainEnum.EstadoInterno.valueOf(estadoInterno));
+		solicitudEntity.setEstadoExperian(estadoExperian == null ? solicitudEntity.getEstadoExperian() : estadoExperian);
+		solicitudEntity.setSubEstadoExperian(subEstadoExperian == null ? solicitudEntity.getSubEstadoExperian() : subEstadoExperian);
+		solicitudEntity.setEstadoInterno(estadoInterno == null ? solicitudEntity.getEstadoInterno() : DomainEnum.EstadoInterno.valueOf(estadoInterno));
 		solicitudEntity.setFechaUltimaActualizacion(OffsetDateTime.now());
 		
 		solicitudRepository.save(solicitudEntity);

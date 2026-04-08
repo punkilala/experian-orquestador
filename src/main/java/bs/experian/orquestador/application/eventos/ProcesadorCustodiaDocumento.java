@@ -32,27 +32,22 @@ public class ProcesadorCustodiaDocumento implements EventoProcesador {
 		//recepcion documento tardio una vez que Experian ya notifico all o partial_documents_downloaded
 		SolicitudEntity solicitud = solicitudApplicationService.getSolicitud(evento.getQueryId());
 		if(STATUS_SUCCESS.equals(solicitud.getEstadoExperian())) {
-			recalcularEstadoFinal(solicitud, evento);
+			boolean todoOk = solicitud.getEstadoInterno().name().equals(CUSTODIA_COMPLETA);
+		    boolean todoKo = solicitud.getEstadoInterno().name().equals(ERROR_CUSTODIA);
+		    boolean pdfKo = DOC_CUSTODIA_KO.equals(evento.getEventData().getSubstatus());
+		    boolean pdfOk = DOC_CUSTODIA_OK.equals(evento.getEventData().getSubstatus());
+
+		    if ((todoOk && pdfKo) || (todoKo && pdfOk)) {
+		        evento.getEventData().setEstadoInternoFinal(CUSTODIA_PARTICAL);
+		    }else {
+		    	evento.getEventData().setEstadoInternoFinal(solicitud.getEstadoInterno().name());
+		    }
 			evento.getEventData().setStatus(solicitud.getEstadoExperian());
 			evento.getEventData().setSubstatus(solicitud.getSubEstadoExperian());
 			evento.getEventData().setEventoFinal(true);
 		}
 		
 	}
-	
-	private void recalcularEstadoFinal(SolicitudEntity solicitud, EventoDto evento) {
-	    boolean todoOk = solicitud.getEstadoInterno().name().equals(CUSTODIA_COMPLETA);
-	    boolean todoKo = solicitud.getEstadoInterno().name().equals(ERROR_CUSTODIA);
-	    boolean pdfKo = DOC_CUSTODIA_KO.equals(evento.getEventData().getPdfEstado());
-	    boolean pdfOk = DOC_CUSTODIA_OK.equals(evento.getEventData().getPdfEstado());
-
-	    if ((todoOk && pdfKo) || (todoKo && pdfOk)) {
-	        evento.getEventData().setEstadoInternoFinal(CUSTODIA_PARTICAL);
-	    }else {
-	    	evento.getEventData().setEstadoInternoFinal(solicitud.getEstadoInterno().name());
-	    }
-	}
-
 }
 
 
