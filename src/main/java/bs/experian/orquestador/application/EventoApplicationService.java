@@ -47,6 +47,6 @@ public class EventoApplicationService {
 
 		procesadorDocumentoRepository.moverDocumentosAHistorico(evento.getQueryId());
 		
-		procesadorSolicitudesRepository.actualizarDirectoEstadoSolicitud(evento);
+		procesadorSolicitudesRepository.actualizarEstadoFinalSolicitud(evento);
 	}
 }

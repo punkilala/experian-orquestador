@@ -49,6 +49,8 @@ public class SolicitudEntity {
 	@Column(name = "ESTADO_INTERNO", nullable = false)
 	private DomainEnum.EstadoInterno estadoInterno;
 	
+	@Column(name = "ESTADO_CONSENTIMIENTO")
+	private String estadoConsentimiento;
 
 	@Column(name = "OFICINA_GESTOR")
 	private String oficinaGestor;

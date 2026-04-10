@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import bs.experian.orquestador.application.DocumentoApplicationService;
 import bs.experian.orquestador.application.model.evento.EventoDto;
-import bs.experian.orquestador.domain.enums.DomainEnum;
+import bs.experian.orquestador.domain.enums.DomainEnum.EstadoInterno;
 import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudBaseEntity;
 import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudEntity;
 import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudHistEntity;
@@ -48,8 +48,7 @@ public class ProcesadorCustodiaDocumento implements EventoProcesador {
 			List<DocumentosSolicitudHistEntity> docHist = documentoApplicationService.listaDocumentosHistorico(evento.getQueryId());
 			docsBase.addAll(docHist);
 			
-			DomainEnum.EstadoInterno result = procesadorAllPartialDocumentsDownloaded.calcularEstadoSolicitudPorEstadoDocumento(docsBase);
-
+			EstadoInterno result = procesadorAllPartialDocumentsDownloaded.calcularEstadoSolicitudPorEstadoDocumento(docsBase);
 
 		    evento.getEventData().getSolicitudActual().setEstadoInterno(result);
 			evento.getEventData().setEventoFinal(true);

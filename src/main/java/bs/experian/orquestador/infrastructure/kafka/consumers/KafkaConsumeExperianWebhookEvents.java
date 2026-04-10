@@ -27,6 +27,7 @@ import bs.experian.orquestador.infrastructure.exceptions.RetryableProcessingExce
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import static bs.experian.orquestador.application.utils.OrquestadorUtils.stackTraceToString;
+import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
 
 /**
  * Topic kafka para consumir los eventos procedentes de Experian
@@ -43,8 +44,7 @@ public class KafkaConsumeExperianWebhookEvents {
 	
 	@RetryableTopic(
             attempts = "4", 
-//            backoff = @Backoff(delay = 3_600_000),
-            backoff = @Backoff(delay = 20_000),
+            backoff = @Backoff(delay = 3_600_000),
             exclude = {NonRetryableProcessingException.class},
             dltStrategy = DltStrategy.FAIL_ON_ERROR,
             autoCreateTopics = "true"
@@ -96,19 +96,19 @@ public class KafkaConsumeExperianWebhookEvents {
 			ack.acknowledge();
 			
 		 } catch (JsonProcessingException e) {
-		        eventoApplicationService.finalizarEvento(evento, "ERROR_PROCESAMIENTO", e.getMessage(), stackTraceToString(e, 30));
+		        eventoApplicationService.finalizarEvento(evento, ERROR_PROCESAMIENTO, e.getMessage(), stackTraceToString(e, 30));
 		        throw new NonRetryableProcessingException("Mensaje JSON invalido", e);
 		    } catch ( KafkaException e) {
 		        log.error("###ERR KafkaConsumeExperianWebhookEvents: Error Kafka procesando evento Experian", e);
-		        eventoApplicationService.finalizarEvento(evento, "ERROR_PROCESAMIENTO", e.getMessage(), stackTraceToString(e, 30));
+		        eventoApplicationService.finalizarEvento(evento, ERROR_PROCESAMIENTO, e.getMessage(), stackTraceToString(e, 30));
 		        throw new RetryableProcessingException("Error Kafka procesando evento Experian", e);
-		    }catch (RetryableProcessingException | NonRetryableProcessingException e) {
-		    	if (e instanceof RetryableProcessingException) {
-		    		eventoApplicationService.finalizarEvento(evento, "ERROR_PROCESAMIENTO", e.getMessage(), stackTraceToString(e, 30));
-		    	}
+		    }catch (RetryableProcessingException e) {
+		    	eventoApplicationService.finalizarEvento(evento, ERROR_PROCESAMIENTO, e.getMessage(), stackTraceToString(e, 30));
+		        throw e;
+		    }catch (NonRetryableProcessingException e) {
 		        throw e;
 		    } catch (Exception e) {
-		    	eventoApplicationService.finalizarEvento(evento, "ERROR_PROCESAMIENTO", e.getMessage(), stackTraceToString(e, 30));
+		    	eventoApplicationService.finalizarEvento(evento, ERROR_PROCESAMIENTO, e.getMessage(), stackTraceToString(e, 30));
 		        log.error("###ERR KafkaConsumeExperianWebhookEvents: inesperado procesando evento Experian", stackTraceToString(e, 30));
 		        throw new RetryableProcessingException("Error inesperado procesando evento Experian", e);
 		    }
@@ -137,18 +137,18 @@ public class KafkaConsumeExperianWebhookEvents {
         	evento.getEventData().setPayLoad(jsonBonito);    
 		} catch (JsonProcessingException e) {
 			evento = new EventoDto();
-			evento.setQueryId("UNKNOWN");
-			evento.setNotificationId("UNKNOWN");
+			evento.setQueryId(UNKNOWN);
+			evento.setNotificationId(UNKNOWN);
 			evento.setEventType("no");
 			
 			PayLoadDto dto = new PayLoadDto();
-			dto.setStatus("UNKNOWN");
-			dto.setSubstatus("UNKNOWN");
+			dto.setStatus(UNKNOWN);
+			dto.setSubstatus(UNKNOWN);
 			dto.setPayLoad(mensaje);
 			evento.setEventData(dto);
 		}
 
-        eventoApplicationService.finalizarEvento(evento, "ERROR_PROCESAMIENTO", exceptionMsg, stacktrace);
+        eventoApplicationService.finalizarEvento(evento, ERROR_PROCESAMIENTO, exceptionMsg, stacktrace);
         ack.acknowledge();
 
     }

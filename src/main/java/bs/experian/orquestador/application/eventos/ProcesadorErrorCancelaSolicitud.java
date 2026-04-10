@@ -1,7 +1,6 @@
 package bs.experian.orquestador.application.eventos;
 
 import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
-import static bs.experian.orquestador.domain.enums.DomainEnum.EstadoInterno.CANCELADA;
 import static bs.experian.orquestador.domain.enums.DomainEnum.EstadoInterno.ERROR;
 
 import java.util.Set;

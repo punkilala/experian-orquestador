@@ -97,7 +97,7 @@ public class ProcesadorDocumentoRepository {
 		}
 	}
 	/**
-	 * Obtener todos los documentos de la solicitud
+	 * Obtener todos los documentos de la solicitud activa
 	 * @param queryId
 	 */
 	public List<DocumentosSolicitudEntity>  obtenerDocumentosSolicitud (String queryId) {
