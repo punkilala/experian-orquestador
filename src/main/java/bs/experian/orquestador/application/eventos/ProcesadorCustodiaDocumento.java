@@ -2,12 +2,18 @@ package bs.experian.orquestador.application.eventos;
 
 import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
-import bs.experian.orquestador.application.SolicitudApplicationService;
+import bs.experian.orquestador.application.DocumentoApplicationService;
 import bs.experian.orquestador.application.model.evento.EventoDto;
+import bs.experian.orquestador.domain.enums.DomainEnum;
+import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudBaseEntity;
+import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudEntity;
+import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudHistEntity;
 import bs.experian.orquestador.infrastructure.persistence.documentos.ProcesadorDocumentoRepository;
-import bs.experian.orquestador.infrastructure.persistence.solicitud.SolicitudEntity;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -15,7 +21,8 @@ import lombok.RequiredArgsConstructor;
 public class ProcesadorCustodiaDocumento implements EventoProcesador {
 	
 	private final ProcesadorDocumentoRepository procesadorDocumentoRepository;
-	private final SolicitudApplicationService solicitudApplicationService;
+	private final DocumentoApplicationService documentoApplicationService;
+	private final ProcesadorAllPartialDocumentsDownloaded procesadorAllPartialDocumentsDownloaded;
 	
 	@Override
 	public boolean aplica(EventoDto evento) {
@@ -30,20 +37,21 @@ public class ProcesadorCustodiaDocumento implements EventoProcesador {
 		procesadorDocumentoRepository.actualizarResultDocumentoSolicitud(evento);
 		
 		//recepcion documento tardio una vez que Experian ya notifico all o partial_documents_downloaded
-		SolicitudEntity solicitud = solicitudApplicationService.getSolicitud(evento.getQueryId());
-		if(STATUS_SUCCESS.equals(solicitud.getEstadoExperian())) {
-			boolean todoOk = solicitud.getEstadoInterno().name().equals(CUSTODIA_COMPLETA);
-		    boolean todoKo = solicitud.getEstadoInterno().name().equals(ERROR_CUSTODIA);
-		    boolean pdfKo = DOC_CUSTODIA_KO.equals(evento.getEventData().getSubstatus());
-		    boolean pdfOk = DOC_CUSTODIA_OK.equals(evento.getEventData().getSubstatus());
+		if(STATUS_SUCCESS.equals(evento.getEventData().getSolicitudActual().getEstadoExperian())) {
+			List<DocumentosSolicitudEntity> docs = documentoApplicationService.listatDocumentosTablaActiva(evento.getQueryId());
+			List<DocumentosSolicitudBaseEntity> docsBase = new ArrayList<>(docs);
+			
+			if(procesadorAllPartialDocumentsDownloaded.hayDocumentosPteProceso(docsBase)) {
+				return;
+			}
+			
+			List<DocumentosSolicitudHistEntity> docHist = documentoApplicationService.listaDocumentosHistorico(evento.getQueryId());
+			docsBase.addAll(docHist);
+			
+			DomainEnum.EstadoInterno result = procesadorAllPartialDocumentsDownloaded.calcularEstadoSolicitudPorEstadoDocumento(docsBase);
 
-		    if ((todoOk && pdfKo) || (todoKo && pdfOk)) {
-		        evento.getEventData().setEstadoInternoFinal(CUSTODIA_PARTICAL);
-		    }else {
-		    	evento.getEventData().setEstadoInternoFinal(solicitud.getEstadoInterno().name());
-		    }
-			evento.getEventData().setStatus(solicitud.getEstadoExperian());
-			evento.getEventData().setSubstatus(solicitud.getSubEstadoExperian());
+
+		    evento.getEventData().getSolicitudActual().setEstadoInterno(result);
 			evento.getEventData().setEventoFinal(true);
 		}
 		

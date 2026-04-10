@@ -36,7 +36,9 @@ public class ProcesadorErrorNoRecuperable implements EventoProcesador {
 	public void procesar(EventoDto evento)  {
 		
 		evento.getEventData().setEventoFinal(true);
-		evento.getEventData().setEstadoInternoFinal(ERROR.name());
+		evento.getEventData().getSolicitudActual().setEstadoInterno(ERROR);
+		evento.getEventData().getSolicitudActual().setEstadoExperian(STATUS_ERROR);
+		evento.getEventData().getSolicitudActual().setSubEstadoExperian(evento.getEventData().getSubstatus());
 		
 	}
 

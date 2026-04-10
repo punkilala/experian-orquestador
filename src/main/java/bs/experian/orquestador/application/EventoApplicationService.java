@@ -9,7 +9,6 @@ import bs.experian.orquestador.infrastructure.persistence.eventos.ProcesadorEven
 import bs.experian.orquestador.infrastructure.persistence.solicitud.ProcesadorSolicitudesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
 
 
 @Service
@@ -48,10 +47,6 @@ public class EventoApplicationService {
 
 		procesadorDocumentoRepository.moverDocumentosAHistorico(evento.getQueryId());
 		
-		procesadorSolicitudesRepository.actualizarDirectoEstadoSolicitud(
-				evento.getQueryId(), 
-				evento.getEventData().getStatus(), 
-				evento.getEventData().getSubstatus(),
-				evento.getEventData().getEstadoInternoFinal());
+		procesadorSolicitudesRepository.actualizarDirectoEstadoSolicitud(evento);
 	}
 }

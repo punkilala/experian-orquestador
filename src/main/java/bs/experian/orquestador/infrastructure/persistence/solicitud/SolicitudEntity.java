@@ -1,9 +1,8 @@
 package bs.experian.orquestador.infrastructure.persistence.solicitud;
 
-
-
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+
+import org.hibernate.annotations.DynamicUpdate;
 
 import bs.experian.orquestador.domain.enums.DomainEnum;
 import jakarta.persistence.Column;
@@ -17,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@DynamicUpdate
 @Entity
 @Table(name="solicitudes_experian")
 @Getter

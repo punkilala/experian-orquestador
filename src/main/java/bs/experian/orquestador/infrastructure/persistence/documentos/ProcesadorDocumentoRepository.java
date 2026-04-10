@@ -10,9 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import bs.experian.orquestador.application.model.evento.EventoDto;
 import bs.experian.orquestador.infrastructure.exceptions.NonRetryableProcessingException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
+import lombok.extern.slf4j.Slf4j;
 
 @Repository
 @RequiredArgsConstructor
@@ -32,10 +31,12 @@ public class ProcesadorDocumentoRepository {
 		DocumentosSolicitudPK pk = new DocumentosSolicitudPK(evento.getQueryId(), evento.getEventData().getDocumentCode());
 	    DocumentosSolicitudEntity entity =
 	            documentosSolicitudesRespository.findById(pk)
-	                    .orElseGet(() -> DocumentosSolicitudEntity.builder()
-	                            .queryId(evento.getQueryId())
-	                            .fechaAlta(OffsetDateTime.now())
-	                            .build());
+	                    .orElseGet(() -> {
+		                    DocumentosSolicitudEntity entityNew = new DocumentosSolicitudEntity();
+		                    entityNew.setQueryId(evento.getQueryId());
+		                    entityNew.setFechaAlta(OffsetDateTime.now());
+		                    return entityNew;
+	                    });
 	    
 	    // si es la primera vez que se trata el documento de una solicitud
 	    if (!Objects.equals(evento.getEventData().getDocumentCode(), entity.getDocumentCode())) {
@@ -68,7 +69,7 @@ public class ProcesadorDocumentoRepository {
 						.formatted(evento.getEventData().getDocumentCode(), evento.getQueryId())));
 		
 		//para descarga y custodia doucmentos
-		entity.setFechaUltimaActualizacion(OffsetDateTime.now());
+		entity.setFechaUltimaAct(OffsetDateTime.now());
 		
 		if("DocumentoDescargado".equals(evento.getEventType())) {
 			entity.setEstadoDocumento(evento.getEventData().getSubstatus());
@@ -104,6 +105,15 @@ public class ProcesadorDocumentoRepository {
 		return documentosSolicitudesRespository.findByQueryId(queryId);
 	}
 	
+	/**
+	 * obtener todos los documentos hist de la solicitud
+	 * @param queryId
+	 * @return
+	 */
+	public List<DocumentosSolicitudHistEntity> obtenerDocumentosHistSolicitud (String queryId){
+		return documentosSolicitudHistRepository.findByQueryId(queryId);
+	}
+	
 	public void moverDocumentosAHistorico(String queryId) {
 	    List<DocumentosSolicitudEntity> documentos = documentosSolicitudesRespository.findByQueryId(queryId);
 
@@ -130,7 +140,7 @@ public class ProcesadorDocumentoRepository {
 	    hist.setDocumentJson(doc.getDocumentJson());
 	    hist.setDocumentPdf(doc.getDocumentPdf());
 	    hist.setFechaAlta(doc.getFechaAlta());
-	    hist.setFechaUltimaActualizacion(doc.getFechaUltimaActualizacion());
+	    hist.setFechaUltimaAct(doc.getFechaUltimaAct());
 	    hist.setFechaCierre(OffsetDateTime.now());
 
 	    return hist;

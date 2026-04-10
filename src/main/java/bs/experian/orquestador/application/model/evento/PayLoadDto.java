@@ -1,5 +1,6 @@
 package bs.experian.orquestador.application.model.evento;
 
+import bs.experian.orquestador.infrastructure.persistence.solicitud.SolicitudEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,6 +23,7 @@ public class PayLoadDto {
 	private String jsonDocumentUrl; 
 	private String jsonEstado;
 	private boolean eventoFinal;
-	private String estadoInternoFinal;
+	private SolicitudEntity solicitudActual;
 }
+
 

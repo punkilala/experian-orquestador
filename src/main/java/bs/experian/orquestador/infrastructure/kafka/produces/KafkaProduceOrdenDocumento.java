@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import static bs.experian.orquestador.application.utils.OrquestadorUtils.stackTraceToString;
 
 import bs.experian.orquestador.infrastructure.dto.integracion.TopicKafkaDocumento;
 import bs.experian.orquestador.infrastructure.exceptions.NonRetryableProcessingException;
@@ -35,15 +36,20 @@ public class KafkaProduceOrdenDocumento {
 		  kafkaTemplate.send(topic, key, value).get();
 			
 		} catch (JsonProcessingException e) {
-	        log.error("Error serializando mensaje Kafka", e);
-	        throw  new  NonRetryableProcessingException("Error serializando mensaje Kafka", e);
-	    } catch (KafkaException | ExecutionException | InterruptedException e) {
-    	    if (e instanceof InterruptedException) {
-    	        Thread.currentThread().interrupt();
-	    	}
-	        log.error("Error al publicar en Kafka", e);
-	        throw  new  RetryableProcessingException("Error al publicar en Kafka", e);
-	    }
+	        log.error("###ERR KafkaProduceOrdenDocumento: Error serializando mensaje Kafka", e);
+	        throw  new  NonRetryableProcessingException("Error serializando mensaje Kafka", stackTraceToString(e,35));
+		} catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("###ERR KafkaProduceOrdenDocumento: Hilo interrumpido al publicar en Kafka. topic={}, queryId={}", topic, mensaje.getQueryId(), stackTraceToString(e,35));
+            throw new RetryableProcessingException("Hilo interrumpido al publicar en Kafka", e);
+
+        } catch (KafkaException | ExecutionException e) {
+            log.error("###ERR KafkaProduceOrdenDocumento: Error al publicar en Kafka. topic={}, queryId={}", topic, mensaje.getQueryId(), stackTraceToString(e,35));
+            throw new RetryableProcessingException(
+                    "Error al publicar en Kafka",
+                    e.getCause() != null ? e.getCause() : e
+            );
+        }
 		
 	}
 

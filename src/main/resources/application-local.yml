@@ -7,27 +7,26 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
-
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       acks: all
-      retries: 5
       properties:
         enable.idempotence: true
         delivery.timeout.ms: 120000
         request.timeout.ms: 30000
-        compression.type: snappy
-        linger.ms: 5
-        batch.size: 32768
     consumer:
       group-id: orquestador-experian
       auto-offset-reset: earliest
+      enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       properties:
-        spring.json.trusted.packages: "*"
-    
+        max.poll.interval.ms: 900000
+
+    listener:
+      ack-mode: manual_immediate
+
   jpa:
     show-sql: true
     properties:

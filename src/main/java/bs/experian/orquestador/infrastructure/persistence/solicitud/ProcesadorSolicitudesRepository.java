@@ -27,10 +27,12 @@ public class ProcesadorSolicitudesRepository {
 		 SolicitudEntity entity = solicitudRepository.findById(evento.getQueryId())
 				 .orElseThrow(()-> new NonRetryableProcessingException("Solicitud no existe ", "Solicitud no encontrada para queryId " + evento.getQueryId()));
 		 
-		 if(ESTADOS_FINALES_EXPERIAN_KO.contains(entity.getEstadoInterno())) {
+		 if(ESTADOS_EXPERIAN_CANCELADA_ERROR.contains(entity.getEstadoInterno())) {
 			 throw new NonRetryableProcessingException("Solicitud en estado final", 
 					 "Solicitud %s en estado final %s ".formatted(evento.getQueryId(), entity.getEstadoInterno()));
 		 }
+		 
+		 evento.getEventData().setSolicitudActual(entity);
 	}
 	
 	/**
@@ -74,58 +76,44 @@ public class ProcesadorSolicitudesRepository {
 	 }
 	
 	/**
-	 * Actualizar la solicitud al procesar un evento
+	 * Actualizar la solicitud al procesar un evento intermedio
 	 * @param queryId
 	 * @param dto
 	 */
 	public void actualizarEstadoSolicitud(EventoDto evento) {
-		
-		SolicitudEntity solicitudEntity = solicitudRepository.findById(evento.getQueryId())
-				.orElseThrow(() ->
-				new NonRetryableProcessingException("Solicitud no encontrada", "Solicitud no encontrada para queryId" + evento.getQueryId()));
-		
+			
 		boolean cambio = false;
 		//solo los eventos de Experian cambian el estado
-		if(evento.getEventData().getOrigen() == null && ! STATUS_SUCCESS.equals(solicitudEntity.getEstadoExperian())) {
-			solicitudEntity.setEstadoExperian(evento.getEventData().getStatus());
-			solicitudEntity.setSubEstadoExperian(evento.getEventData().getSubstatus());
+		if(evento.getEventData().getOrigen() == null && ! STATUS_SUCCESS.equals(evento.getEventData().getSolicitudActual().getEstadoExperian())) {
+			evento.getEventData().getSolicitudActual().setEstadoExperian(evento.getEventData().getStatus());
+			evento.getEventData().getSolicitudActual().setSubEstadoExperian(evento.getEventData().getSubstatus());
 			cambio = true;
 		}
 		
-		if (EstadoInterno.CREADA.equals(solicitudEntity.getEstadoInterno())) {
-			solicitudEntity.setEstadoInterno(EstadoInterno.EN_PROCESO);
+		if (EstadoInterno.CREADA.equals(evento.getEventData().getSolicitudActual().getEstadoInterno())) {
+			evento.getEventData().getSolicitudActual().setEstadoInterno(EstadoInterno.EN_PROCESO);
 			cambio = true;
 		}
 		
-		if(EstadoInterno.EN_PROCESO.equals(solicitudEntity.getEstadoInterno()) && DOC_PTE_CUSTODIA.equals(evento.getEventData().getPdfEstado())) {
-			solicitudEntity.setEstadoInterno(EstadoInterno.CUSTODIA_EN_PROCESO);
+		if(EstadoInterno.EN_PROCESO.equals(evento.getEventData().getSolicitudActual().getEstadoInterno()) && DOC_PTE_CUSTODIA.equals(evento.getEventData().getPdfEstado())) {
+			evento.getEventData().getSolicitudActual().setEstadoInterno(EstadoInterno.CUSTODIA_EN_PROCESO);
 			cambio = true;
 		}
 		
 		if(cambio) {
-			solicitudEntity.setFechaUltimaActualizacion(OffsetDateTime.now());
+			evento.getEventData().getSolicitudActual().setFechaUltimaActualizacion(OffsetDateTime.now());
 			
-			solicitudRepository.save(solicitudEntity);
+			solicitudRepository.save(evento.getEventData().getSolicitudActual());
 		}
 			 
 	}
 	
 	/**
 	 * Actualizar solicitud para estados finales
-	 * @param queryId
-	 * @param estadoInterno
+	 * @param evento
 	 */
-	public void actualizarDirectoEstadoSolicitud (String queryId, String estadoExperian, String subEstadoExperian, String estadoInterno) {
-		SolicitudEntity solicitudEntity = solicitudRepository.findById(queryId)
-				.orElseThrow(() ->
-					new NonRetryableProcessingException("Solicitud no encontrada", "Solicitud no encontrada para queryId" + queryId));
-		
-		solicitudEntity.setEstadoExperian(estadoExperian == null ? solicitudEntity.getEstadoExperian() : estadoExperian);
-		solicitudEntity.setSubEstadoExperian(subEstadoExperian == null ? solicitudEntity.getSubEstadoExperian() : subEstadoExperian);
-		solicitudEntity.setEstadoInterno(estadoInterno == null ? solicitudEntity.getEstadoInterno() : DomainEnum.EstadoInterno.valueOf(estadoInterno));
-		solicitudEntity.setFechaUltimaActualizacion(OffsetDateTime.now());
-		
-		solicitudRepository.save(solicitudEntity);
+	public void actualizarDirectoEstadoSolicitud (EventoDto evento) {
+		solicitudRepository.save(evento.getEventData().getSolicitudActual());
 	}
 		
 }

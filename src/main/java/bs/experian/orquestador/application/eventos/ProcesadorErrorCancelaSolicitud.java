@@ -1,6 +1,7 @@
 package bs.experian.orquestador.application.eventos;
 
 import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
+import static bs.experian.orquestador.domain.enums.DomainEnum.EstadoInterno.CANCELADA;
 import static bs.experian.orquestador.domain.enums.DomainEnum.EstadoInterno.ERROR;
 
 import java.util.Set;
@@ -33,7 +34,9 @@ public class ProcesadorErrorCancelaSolicitud implements EventoProcesador {
 	public void procesar(EventoDto evento)  {
 		
 		evento.getEventData().setEventoFinal(true);
-		evento.getEventData().setEstadoInternoFinal(ERROR.name());
+		evento.getEventData().getSolicitudActual().setEstadoInterno(ERROR);
+		evento.getEventData().getSolicitudActual().setEstadoExperian(STATUS_ERROR);
+		evento.getEventData().getSolicitudActual().setSubEstadoExperian(evento.getEventData().getSubstatus());
 		
 	}
 

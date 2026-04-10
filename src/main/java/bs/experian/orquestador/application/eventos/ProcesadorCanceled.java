@@ -30,7 +30,9 @@ public class ProcesadorCanceled implements EventoProcesador {
 	public void procesar(EventoDto evento)  {
 		
 		evento.getEventData().setEventoFinal(true);
-		evento.getEventData().setEstadoInternoFinal(CANCELADA.name());
+		evento.getEventData().getSolicitudActual().setEstadoInterno(CANCELADA);
+		evento.getEventData().getSolicitudActual().setEstadoExperian(STATUS_CANCELED);
+		evento.getEventData().getSolicitudActual().setSubEstadoExperian(SUBSTATUS_CANCELED);
 		
 	}
 

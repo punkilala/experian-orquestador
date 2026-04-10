@@ -57,17 +57,19 @@ public final class ExperianConstants {
     public static final String DOC_CUSTODIA_OK = "CUSTODIA_OK";
     public static final String DOC_CUSTODIA_KO = "CUSTODIA_KO";
     
-    public static final String CUSTODIA_COMPLETA = "CUSTODIA_COMPLETA";
-    public static final String CUSTODIA_PARTICAL = "CUSTODIA_PARCIAL";
-    public static final String ERROR_CUSTODIA = "ERROR_CUSTODIA";
-    
+  
     public static final String EVENT_TYPE_CUSTODIA = "CustodiaDocumento";
     public static final String STATUS_CUSTODIA = "custodia_documento";
     
-    public static final Set<DomainEnum.EstadoInterno> ESTADOS_FINALES_EXPERIAN_KO = Set.of(
+    public static final Set<DomainEnum.EstadoInterno> ESTADOS_EXPERIAN_CANCELADA_ERROR = Set.of(
 	    		DomainEnum.EstadoInterno.CANCELADA,
 	    	    DomainEnum.EstadoInterno.ERROR
     		);
+    public static final Set<String> STATUS_FINALES_EXPERIAN = Set.of(
+    		STATUS_SUCCESS,
+    		STATUS_CANCELED,
+    		STATUS_ERROR
+		);
     
     
 }

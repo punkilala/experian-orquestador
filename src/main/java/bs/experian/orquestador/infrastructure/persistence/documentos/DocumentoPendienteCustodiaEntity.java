@@ -1,5 +1,9 @@
 package bs.experian.orquestador.infrastructure.persistence.documentos;
 
+import java.time.OffsetDateTime;
+
+import org.hibernate.annotations.DynamicUpdate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -12,8 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.OffsetDateTime;
-
+@DynamicUpdate
 @Entity
 @Table(name = "DOCUMENTOS_PENDIENTES_CUSTODIA")
 @IdClass(DocumentoPendienteCustodiaPK.class)

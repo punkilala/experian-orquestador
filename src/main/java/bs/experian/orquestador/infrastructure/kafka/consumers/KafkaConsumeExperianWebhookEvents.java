@@ -7,6 +7,7 @@ import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.retrytopic.DltStrategy;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
@@ -42,7 +43,8 @@ public class KafkaConsumeExperianWebhookEvents {
 	
 	@RetryableTopic(
             attempts = "4", 
-            backoff = @Backoff(delay = 3_600_000),
+//            backoff = @Backoff(delay = 3_600_000),
+            backoff = @Backoff(delay = 20_000),
             exclude = {NonRetryableProcessingException.class},
             dltStrategy = DltStrategy.FAIL_ON_ERROR,
             autoCreateTopics = "true"
@@ -57,7 +59,8 @@ public class KafkaConsumeExperianWebhookEvents {
     )
     public void listener(
             String mensaje,
-            @Header(name = KafkaHeaders.RECEIVED_KEY, required = false) String queryId) throws JsonProcessingException{
+            @Header(name = KafkaHeaders.RECEIVED_KEY, required = false) String queryId,
+            Acknowledgment ack) {
 		
 		EventoDto evento = null;
 		
@@ -90,6 +93,8 @@ public class KafkaConsumeExperianWebhookEvents {
 				eventoApplicationService.finalizarEvento(evento, result, null, null);
 			}
 			
+			ack.acknowledge();
+			
 		 } catch (JsonProcessingException e) {
 		        eventoApplicationService.finalizarEvento(evento, "ERROR_PROCESAMIENTO", e.getMessage(), stackTraceToString(e, 30));
 		        throw new NonRetryableProcessingException("Mensaje JSON invalido", e);
@@ -115,7 +120,8 @@ public class KafkaConsumeExperianWebhookEvents {
     		String mensaje,
             @Header(name = KafkaHeaders.RECEIVED_KEY, required = false) String queryId,
             @Header(name = "kafka_exception-message", required = false) byte[] exceptionMessage,
-            @Header(name = "kafka_exception-stacktrace", required = false) byte[] exceptionStacktrace) {
+            @Header(name = "kafka_exception-stacktrace", required = false) byte[] exceptionStacktrace,
+            Acknowledgment ack) {
     	
         String exceptionMsg = toStringSafe(exceptionMessage);
         String stacktrace = toStringSafe(exceptionStacktrace);
@@ -143,6 +149,7 @@ public class KafkaConsumeExperianWebhookEvents {
 		}
 
         eventoApplicationService.finalizarEvento(evento, "ERROR_PROCESAMIENTO", exceptionMsg, stacktrace);
+        ack.acknowledge();
 
     }
     
