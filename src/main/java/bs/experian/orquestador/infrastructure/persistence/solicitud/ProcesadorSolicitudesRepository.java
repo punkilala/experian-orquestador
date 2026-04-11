@@ -31,6 +31,14 @@ public class ProcesadorSolicitudesRepository {
 					 "Solicitud %s en estado final %s ".formatted(evento.getQueryId(), entity.getEstadoInterno()));
 		 }
 		 
+		 if(STATUS_SUCCESS.equals(entity.getEstadoExperian()) 
+				 && ESTADOS_FINALES_DOCUMENTACION.contains(entity.getSubEstadoExperian())
+				 && ! TIPO_EVENTOS_POSIBLES_TRAS_FIN_DOCUMENTACION.contains(evento.getEventType())
+				 && ! TIPO_EVENTOS_POSIBLES_TRAS_FIN_DOCUMENTACION.contains(evento.getEventData().getStatus())){
+			 throw new NonRetryableProcessingException("Evento no permitido", 
+					 "Actualmente la Solicitud no permite esta accion por encontrarse en el estado final: %s (%s)"
+					 .formatted(entity.getEstadoExperian(), entity.getSubEstadoExperian()));
+		 }
 		 
 		 evento.getEventData().setSolicitudActual(entity);
 	}
@@ -86,7 +94,8 @@ public class ProcesadorSolicitudesRepository {
 	
 		SolicitudEntity solicitud = evento.getEventData().getSolicitudActual();
 		
-		if(evento.getEventData().getOrigen() == null && ! STATUS_SUCCESS.equals(solicitud.getEstadoExperian())) {
+		if(evento.getEventData().getOrigen() == null && 
+				!(STATUS_SUCCESS.equals(solicitud.getEstadoExperian()) && ESTADOS_FINALES_DOCUMENTACION.contains(solicitud.getSubEstadoExperian()))) {
 			//es evento intermedio experian
 			solicitud.setEstadoExperian(evento.getEventData().getStatus());
 			solicitud.setSubEstadoExperian(evento.getEventData().getSubstatus());

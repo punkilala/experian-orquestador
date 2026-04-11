@@ -1,5 +1,6 @@
 package bs.experian.orquestador.infrastructure.kafka.consumers;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import org.apache.kafka.common.KafkaException;
@@ -68,7 +69,9 @@ public class KafkaConsumeExperianWebhookEvents {
 			log.info("Mensaje recibido en ORQUESTADOR: {}", mensaje);
 
 	        evento = objectMapper.readValue(mensaje, EventoDto.class);
+	        evento.getEventData().setFechaInicioEvento(OffsetDateTime.now());
 	        
+	        //saber si hay que atender al evento
 	        solicitudApplicationService.comprobarSolicitud(evento);
 	        
 	        JsonNode node = objectMapper.readTree(mensaje);
@@ -132,6 +135,7 @@ public class KafkaConsumeExperianWebhookEvents {
         
         try {
         	evento = objectMapper.readValue(mensaje, EventoDto.class);
+        	evento.getEventData().setFechaInicioEvento(OffsetDateTime.now());
             JsonNode node = objectMapper.readTree(mensaje);
         	String jsonBonito = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(node);
         	evento.getEventData().setPayLoad(jsonBonito);    

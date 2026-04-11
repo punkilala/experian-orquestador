@@ -32,8 +32,7 @@ public class ProcesadorNewAvailableDocument implements EventoProcesador {
 	}
 
 	@Override
-	public void procesar(EventoDto evento)  {
-		
+	public void procesar(EventoDto evento)  {		
 		//registrar documento en la tabla DocumentosSolicitdes y llamar a integracion pdara pasarselo
 		TopicKafkaDocumento mensaje = new TopicKafkaDocumento();
 		mensaje.setQueryId(evento.getQueryId());

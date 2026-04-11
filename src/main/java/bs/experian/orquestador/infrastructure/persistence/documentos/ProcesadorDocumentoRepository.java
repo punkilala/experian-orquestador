@@ -127,9 +127,8 @@ public class ProcesadorDocumentoRepository {
 	            .toList();
 
 	    documentosSolicitudHistRepository.saveAll(historicos);
-	    documentosSolicitudesRespository.deleteAllByQueryId(queryId);
+	    documentosSolicitudesRespository.deleteAllInBatch(documentos);
 	}
-	
 	private DocumentosSolicitudHistEntity toHistorico(DocumentosSolicitudEntity doc) {
 	    DocumentosSolicitudHistEntity hist = new DocumentosSolicitudHistEntity();
 

@@ -1,5 +1,7 @@
 package bs.experian.orquestador.application.model.evento;
 
+import java.time.OffsetDateTime;
+
 import bs.experian.orquestador.infrastructure.persistence.solicitud.SolicitudEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +16,7 @@ import lombok.Setter;
 @Builder
 public class PayLoadDto {
 	private String origen;
+	private OffsetDateTime fechaInicioEvento;
 	private String payLoad;
 	private String status;
 	private String substatus;

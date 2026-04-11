@@ -31,11 +31,11 @@ public class ProcesadorErrorCancelaSolicitud implements EventoProcesador {
 
 	@Override
 	public void procesar(EventoDto evento)  {
-		
 		evento.getEventData().setEventoFinal(true);
 		evento.getEventData().getSolicitudActual().setEstadoInterno(ERROR);
 		evento.getEventData().getSolicitudActual().setEstadoExperian(STATUS_ERROR);
 		evento.getEventData().getSolicitudActual().setSubEstadoExperian(evento.getEventData().getSubstatus());
+		evento.getEventData().getSolicitudActual().setEstadoConsentimiento(evento.getEventData().getSubstatus());
 		
 	}
 

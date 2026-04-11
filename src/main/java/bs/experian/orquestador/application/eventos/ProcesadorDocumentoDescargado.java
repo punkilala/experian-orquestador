@@ -1,10 +1,6 @@
 package bs.experian.orquestador.application.eventos;
 
-import static bs.experian.orquestador.domain.constants.ExperianConstants.DOC_PTE_CUSTODIA;
-import static bs.experian.orquestador.domain.constants.ExperianConstants.EVENT_DOCUMENTO_DESCARGADO;
-import static bs.experian.orquestador.domain.constants.ExperianConstants.STATUS_DOCUMENTO_DESCARGADO;
-import static bs.experian.orquestador.domain.constants.ExperianConstants.STATUS_SUCCESS;
-
+import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +15,7 @@ import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosS
 import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudEntity;
 import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudHistEntity;
 import bs.experian.orquestador.infrastructure.persistence.documentos.ProcesadorDocumentoRepository;
+import bs.experian.orquestador.infrastructure.persistence.solicitud.SolicitudEntity;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -52,7 +49,8 @@ public class ProcesadorDocumentoDescargado implements EventoProcesador {
 			kafkaProduceOrdenDocumento.publicar(mensaje, "documento.custodia.orden");
 		}else {
 			//documentos tardios que no se han podido descargar despues de haber recibido all o partical_documents_donwloaded
-			if(STATUS_SUCCESS.equals(evento.getEventData().getSolicitudActual().getEstadoExperian())){
+			SolicitudEntity solicitud = evento.getEventData().getSolicitudActual();
+			if(STATUS_SUCCESS.equals(solicitud.getEstadoExperian()) && ESTADOS_FINALES_DOCUMENTACION.contains(solicitud.getSubEstadoExperian())){
 				recalcularEstado(evento);
 			}
 		}

@@ -11,6 +11,5 @@ public interface DocumentosSolicitudRespository extends JpaRepository<Documentos
 	Optional<DocumentosSolicitudEntity>findByQueryIdAndDocumentCode(String queryId, String documentCode);
 	 boolean existsByQueryIdAndNotificationId(String queryId, String notificationId);
 	 List<DocumentosSolicitudEntity> findByQueryId(String queryId);
-	 void deleteAllByQueryId(String queryId);
 	
 }

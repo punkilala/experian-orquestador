@@ -29,10 +29,7 @@ public class ProcesadorAllPartialDocumentsDownloaded implements EventoProcesador
 		
 		return EVENT_STATUS_CHANGED.equals(evento.getEventType())
 	            && STATUS_SUCCESS.equals(evento.getEventData().getStatus())
-	            && (
-	                SUBSTATUS_ALL_DOCUMENTS_DOWNLOADED.equals(evento.getEventData().getSubstatus())
-	                || SUBSTATUS_PARTIAL_DOCUMENTS_DOWNLOADED.equals(evento.getEventData().getSubstatus())
-	            );
+	            && ESTADOS_FINALES_DOCUMENTACION.contains(evento.getEventData().getSubstatus());
 	}
 
 	@Override

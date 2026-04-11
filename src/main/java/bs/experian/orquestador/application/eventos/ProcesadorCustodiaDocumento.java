@@ -1,7 +1,6 @@
 package bs.experian.orquestador.application.eventos;
 
 import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +13,7 @@ import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosS
 import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudEntity;
 import bs.experian.orquestador.infrastructure.persistence.documentos.DocumentosSolicitudHistEntity;
 import bs.experian.orquestador.infrastructure.persistence.documentos.ProcesadorDocumentoRepository;
+import bs.experian.orquestador.infrastructure.persistence.solicitud.SolicitudEntity;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -37,7 +37,8 @@ public class ProcesadorCustodiaDocumento implements EventoProcesador {
 		procesadorDocumentoRepository.actualizarResultDocumentoSolicitud(evento);
 		
 		//recepcion documento tardio una vez que Experian ya notifico all o partial_documents_downloaded
-		if(STATUS_SUCCESS.equals(evento.getEventData().getSolicitudActual().getEstadoExperian())) {
+		SolicitudEntity solicitud = evento.getEventData().getSolicitudActual();
+		if(STATUS_SUCCESS.equals(solicitud.getEstadoExperian()) && ESTADOS_FINALES_DOCUMENTACION.contains(solicitud.getSubEstadoExperian())){
 			List<DocumentosSolicitudEntity> docs = documentoApplicationService.listatDocumentosTablaActiva(evento.getQueryId());
 			List<DocumentosSolicitudBaseEntity> docsBase = new ArrayList<>(docs);
 			

@@ -42,7 +42,7 @@ public class ProcesadorEventoJPARepository {
 		entity.setSubestadoExperian(evento.getEventData().getSubstatus());
 		entity.setDocumentCode(evento.getEventData().getDocumentCode());
 		entity.setPayloadJson(evento.getEventData().getPayLoad());
-		entity.setFechaAlta(OffsetDateTime.now());
+		entity.setFechaAlta(evento.getEventData().getFechaInicioEvento());
 		entity.setFechaProcesado(OffsetDateTime.now());
 		entity.setResultadoProceso(procesado);
 		entity.setErrorCode(errCode);
