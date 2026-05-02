@@ -25,6 +25,7 @@ public final class ExperianConstants {
     public static final String EVENT_TYPE_CUSTODIA = "CustodiaDocumento";
 
     //tipos de status
+    public static final String STATUS_CREATED = "Created";
     public static final String STATUS_PROCESSING = "Processing";
     public static final String STATUS_SUCCESS = "Success";
     public static final String STATUS_CANCELED = "Canceled";

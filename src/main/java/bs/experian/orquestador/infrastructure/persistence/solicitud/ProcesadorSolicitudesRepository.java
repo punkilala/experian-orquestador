@@ -1,22 +1,28 @@
 package bs.experian.orquestador.infrastructure.persistence.solicitud;
 
+import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
+
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
 import bs.experian.orquestador.application.model.evento.EventoDto;
 import bs.experian.orquestador.domain.enums.DomainEnum.EstadoInterno;
 import bs.experian.orquestador.infrastructure.dto.integracion.SolicitudNuevaRequest;
+import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudActivaDto;
 import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudNuevaResponse;
+import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudesActivasResponse;
 import bs.experian.orquestador.infrastructure.exceptions.NonRetryableProcessingException;
+import bs.experian.orquestador.infrastructure.mappers.OrquestadorMapper;
 import lombok.RequiredArgsConstructor;
-import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
 
 @Repository
 @RequiredArgsConstructor
 public class ProcesadorSolicitudesRepository {
 	
 	private final SolicitudRepository solicitudRepository;
+	private final OrquestadorMapper mapper;
 	
 	/**
 	 * De un evento si existe solicitud o esta ya esta en estado finalizada
@@ -125,6 +131,34 @@ public class ProcesadorSolicitudesRepository {
 	 */
 	public void actualizarEstadoFinalSolicitud (EventoDto evento) {
 		solicitudRepository.save(evento.getEventData().getSolicitudActual());
+	}
+	
+	public SolicitudesActivasResponse obtenerSolicitudesActivas (String idFiscal) {
+		SolicitudesActivasResponse response = new SolicitudesActivasResponse();
+		response.setIdFiscal(idFiscal);
+		
+		//buscar solicitudes en curso
+		List<SolicitudEntity> solicitudes = solicitudRepository.findByEstadoExperianInAndPersonId(
+				List.of(STATUS_CREATED, STATUS_PROCESSING), 
+				idFiscal
+		);
+		response.setSolicitudesEnCuros(mapper.entityListToDtoList(solicitudes));
+		response.setNumSolicitudesEncurso(solicitudes.size());
+		
+		//buscar solicitudes vigentes
+		OffsetDateTime fechaLimite = OffsetDateTime.now().minusDays(90);
+
+		solicitudes = solicitudRepository.findSolicitudesVigentes(
+				STATUS_SUCCESS,
+                List.of(SUBSTATUS_ALL_DOCUMENTS_DOWNLOADED, SUBSTATUS_PARTIAL_DOCUMENTS_DOWNLOADED),
+                fechaLimite,
+                idFiscal
+        );
+		response.setSolicitudesVigentes(mapper.entityListToDtoList(solicitudes));
+		response.setNumSolicitudesVigentes(solicitudes.size());
+		
+		return response;
+		
 	}
 		
 }
