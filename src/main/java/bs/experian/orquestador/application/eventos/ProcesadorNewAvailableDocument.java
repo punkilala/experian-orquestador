@@ -26,9 +26,7 @@ public class ProcesadorNewAvailableDocument implements EventoProcesador {
 	@Override
 	public boolean aplica(EventoDto evento) {
 		
-		return EVENT_NEW_DOCUMENT_AVAILABLE.equals(evento.getEventType())
-	            && STATUS_PROCESSING.equals(evento.getEventData().getStatus())
-	            && (SUBSTATUS_NEW_DOCUMENT_AVAILABLE.equals(evento.getEventData().getSubstatus()));
+		return EVENT_NEW_DOCUMENT_AVAILABLE.equals(evento.getEventType());
 	}
 
 	@Override

@@ -100,7 +100,27 @@
 			<artifactId>spring-kafka-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<!--avro-->
+		<dependency>
+            <groupId>bs.experian.integracion</groupId>
+            <artifactId>experian-integracion-avro</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-avro-serializer</artifactId>
+            <version>7.5.0</version>
+        </dependency>
 	</dependencies>
+	
+	<!--avro-->
+    <repositories>
+        <repository>
+            <id>confluent</id>
+            <url>https://packages.confluent.io/maven/</url>
+        </repository>
+    </repositories>
 
 	<build>
 		<plugins>
