@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 import bs.experian.orquestador.application.model.evento.EventoDto;
 import bs.experian.orquestador.domain.enums.DomainEnum.EstadoInterno;
 import bs.experian.orquestador.infrastructure.dto.integracion.SolicitudNuevaRequest;
-import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudActivaDto;
 import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudNuevaResponse;
 import bs.experian.orquestador.infrastructure.dto.orquestador.SolicitudesActivasResponse;
 import bs.experian.orquestador.infrastructure.exceptions.NonRetryableProcessingException;
@@ -39,8 +38,7 @@ public class ProcesadorSolicitudesRepository {
 		 
 		 if(STATUS_SUCCESS.equals(entity.getEstadoExperian()) 
 				 && ESTADOS_FINALES_DOCUMENTACION.contains(entity.getSubEstadoExperian())
-				 && ! TIPO_EVENTOS_POSIBLES_TRAS_FIN_DOCUMENTACION.contains(evento.getEventType())
-				 && ! TIPO_EVENTOS_POSIBLES_TRAS_FIN_DOCUMENTACION.contains(evento.getEventData().getStatus())){
+				 && ! TIPO_EVENTOS_POSIBLES_TRAS_FIN_DOCUMENTACION.contains(evento.getEventType())){
 			 throw new NonRetryableProcessingException("Evento no permitido", 
 					 "Actualmente la Solicitud no permite esta accion por encontrarse en el estado final: %s (%s)"
 					 .formatted(entity.getEstadoExperian(), entity.getSubEstadoExperian()));
@@ -103,8 +101,9 @@ public class ProcesadorSolicitudesRepository {
 		if(evento.getEventData().getOrigen() == null && 
 				!(STATUS_SUCCESS.equals(solicitud.getEstadoExperian()) && ESTADOS_FINALES_DOCUMENTACION.contains(solicitud.getSubEstadoExperian()))) {
 			//es evento intermedio experian
-			solicitud.setEstadoExperian(evento.getEventData().getStatus());
-			solicitud.setSubEstadoExperian(evento.getEventData().getSubstatus());
+			
+			solicitud.setEstadoExperian(evento.getEventData().getStatus() == null ? solicitud.getEstadoExperian() : evento.getEventData().getStatus() );
+			solicitud.setSubEstadoExperian(evento.getEventData().getSubstatus() == null ? solicitud.getSubEstadoExperian() : evento.getEventData().getSubstatus());
 			cambio = true;
 		}
 		
@@ -113,7 +112,7 @@ public class ProcesadorSolicitudesRepository {
 			cambio = true;
 		}
 		
-		if(EstadoInterno.EN_PROCESO.equals(solicitud.getEstadoInterno()) && DOC_PTE_CUSTODIA.equals(evento.getEventData().getPdfEstado())) {
+		if(EstadoInterno.EN_PROCESO.equals(solicitud.getEstadoInterno()) && EVENT_NEW_DOCUMENT_AVAILABLE.equals(evento.getEventType())) {
 			solicitud.setEstadoInterno(EstadoInterno.CUSTODIA_EN_PROCESO);
 			cambio = true;
 		}

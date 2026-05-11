@@ -5,6 +5,8 @@ import static bs.experian.orquestador.domain.constants.ExperianConstants.STATUS_
 import static bs.experian.orquestador.domain.constants.ExperianConstants.SUBSTATUS_CONSENT_PROCECCS_COMPLETED;
 
 import org.springframework.stereotype.Component;
+
+import bs.experian.orquestador.application.EventoApplicationService;
 import bs.experian.orquestador.application.model.evento.EventoDto;
 import lombok.RequiredArgsConstructor;
 
@@ -15,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProcesadorConsentProcessCompleted implements EventoProcesador {
 	
-
+	private final EventoApplicationService eventoApplicationService;
 
 	@Override
 	public boolean aplica(EventoDto evento) {
@@ -29,6 +31,8 @@ public class ProcesadorConsentProcessCompleted implements EventoProcesador {
 	public void procesar(EventoDto evento)  {
 		
 		evento.getEventData().getSolicitudActual().setEstadoConsentimiento(evento.getEventData().getSubstatus());
+		//finalizar evento
+		eventoApplicationService.finalizarEventoConDocumento(evento);
 		
 	}
 

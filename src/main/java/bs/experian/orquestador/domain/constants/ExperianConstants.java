@@ -21,8 +21,8 @@ public final class ExperianConstants {
     //tipos de eventos
     public static final String EVENT_STATUS_CHANGED = "StatusChanged";
     public static final String EVENT_NEW_DOCUMENT_AVAILABLE = "NewDocumentAvailable";
-    public static final String EVENT_DOCUMENTO_DESCARGADO = "DocumentoDescargado";
-    public static final String EVENT_TYPE_CUSTODIA = "CustodiaDocumento";
+    public static final String EVENT_RESULT_DESCARGA_CUSTODIA_DOCUMENTO = "ResultDescargaCustodiaDocumento";
+  
 
     //tipos de status
     public static final String STATUS_CREATED = "Created";
@@ -83,8 +83,7 @@ public final class ExperianConstants {
     
     public static final Set<String>TIPO_EVENTOS_POSIBLES_TRAS_FIN_DOCUMENTACION = Set.of(
     			EVENT_NEW_DOCUMENT_AVAILABLE,
-    			EVENT_DOCUMENTO_DESCARGADO,
-    			EVENT_TYPE_CUSTODIA,
+    			EVENT_RESULT_DESCARGA_CUSTODIA_DOCUMENTO,
     			STATUS_CANCELED,
     			STATUS_ERROR
     		);

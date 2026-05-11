@@ -9,13 +9,12 @@ import bs.experian.orquestador.infrastructure.persistence.eventos.ProcesadorEven
 import bs.experian.orquestador.infrastructure.persistence.solicitud.ProcesadorSolicitudesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
+import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EventoApplicationService {
-	
 	private final ProcesadorEventoJPARepository procesadorEventoJPARepository;
 	private final ProcesadorSolicitudesRepository procesadorSolicitudesRepository;
 	private final ProcesadorDocumentoRepository procesadorDocumentoRepository;
@@ -37,15 +36,41 @@ public class EventoApplicationService {
 	}
 	
 	/**
+	 * finalizar el procesamiento de un evento  cuando se registra un nuevo documento
+	 * @param evento
+	 * @param result
+	 * @param errCode
+	 * @param errMsj
+	 */
+	@Transactional
+	public void finalizarEventoConDocumento (EventoDto evento) {
+		//registrar nuevo documento
+		if(evento.getEventType().equals(EVENT_NEW_DOCUMENT_AVAILABLE)) {
+			procesadorDocumentoRepository.registrarDocumentoPteDescarga(evento);
+		} else if (evento.getEventType().equals(EVENT_RESULT_DESCARGA_CUSTODIA_DOCUMENTO)) {
+			//actualizar resultado descarga y custodia
+			procesadorDocumentoRepository.actualizarResultDocumentoSolicitud(evento);
+		}
+		
+		//evento a historico
+		procesadorEventoJPARepository.moverEventoProcesadoToHist(evento, "PROCESADO", null, null );
+		
+		//actualizar solicitud
+		procesadorSolicitudesRepository.actualizarEstadoSolicitud(evento);
+
+	}
+	
+	/**
 	 * Finalizar solicitud
 	 * @param evento
 	 * @param result
 	 */
 	@Transactional
 	public void finalizarSolicitud (EventoDto evento, String result) {
+		if(evento.getEventType().equals(EVENT_RESULT_DESCARGA_CUSTODIA_DOCUMENTO)) {
+			procesadorDocumentoRepository.actualizarResultDocumentoSolicitud(evento);
+		}
 		procesadorEventoJPARepository.moverEventoProcesadoToHist(evento, result, null, null );
-
-		procesadorDocumentoRepository.moverDocumentosAHistorico(evento.getQueryId());
 		
 		procesadorSolicitudesRepository.actualizarEstadoFinalSolicitud(evento);
 	}

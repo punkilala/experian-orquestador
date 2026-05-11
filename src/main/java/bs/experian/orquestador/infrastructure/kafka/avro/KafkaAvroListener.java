@@ -52,7 +52,8 @@ public class KafkaAvroListener {
 	@KafkaListener(
 	        topics = {
 	            "experian.statusChanged.avro.v3",
-	            "experian.newDocumentAvailable.avro.v3"
+	            "experian.newDocumentAvailable.avro.v3",
+	            "documento.descarga.result.avro.v1"
 	        },
 	        containerFactory = "avroKafkaListenerContainerFactory"
 	)
@@ -61,7 +62,7 @@ public class KafkaAvroListener {
 		try {
 			Object mensajeKafka = recordKafka.value();
 			
-			
+			//obtener eventoDto a partir del mensaje kafka
 			for (TiposEventosProcesador procesador : tiposEventos) {
 				if(procesador.soportado(mensajeKafka)) {
 					evento = procesador.procesar(mensajeKafka);
@@ -79,6 +80,7 @@ public class KafkaAvroListener {
 	        
 	        boolean procesado = false;
 			
+	        //procesar evento
 			for (EventoProcesador procesador : procesadoresEvento) {
 				if(procesador.aplica(evento)) {
 					procesador.procesar(evento);
@@ -87,15 +89,20 @@ public class KafkaAvroListener {
 				}
 			}
 			
-			String result = procesado ? "PROCESADO" : "NO_ACCION";
 			
+			//finalizar evento
 			if(evento.getEventData().isEventoFinal()) {
-				eventoApplicationService.finalizarSolicitud(evento, result);
-			}else {
-				eventoApplicationService.finalizarEvento(evento, result, null, null);
+				eventoApplicationService.finalizarSolicitud(evento, "PROCESADO");
 			}
 			
+			//si no hay procesamiento del evento se pasa a historico sin hacer nada mas
+			if(!procesado){
+				eventoApplicationService.finalizarEvento(evento, "NO_ACCION", null, null);
+			}
+			
+			//marcar mensaje kafka como consumido
 			ack.acknowledge();
+			
 		} catch ( KafkaException e) {
 	        log.error("###ERR KafkaConsumeExperianWebhookEvents: Error Kafka procesando evento Experian", e);
 	        eventoApplicationService.finalizarEvento(evento, ERROR_PROCESAMIENTO, e.getMessage(), stackTraceToString(e, 30));

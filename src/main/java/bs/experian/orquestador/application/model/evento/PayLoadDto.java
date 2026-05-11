@@ -21,10 +21,13 @@ public class PayLoadDto {
 	private String status;
 	private String substatus;
 	private String documentCode;
+	private String resultDescargaCustodia;
 	private String pdfDocumentUrl;
 	private String pdfEstado;
+	private String pdfErrorMsg;
 	private String jsonDocumentUrl; 
 	private String jsonEstado;
+	private String jsonErrorMsg;
 	private boolean eventoFinal;
 	private SolicitudEntity solicitudActual;
 }

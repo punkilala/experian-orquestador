@@ -30,6 +30,7 @@ public class KafkaAvroConsumerConfig {
 	    props.put("schema.registry.url", "http://localhost:8081");
 	    props.put("specific.avro.reader", true);
 	    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+	    
 
 	    return new DefaultKafkaConsumerFactory<>(props);
 	}

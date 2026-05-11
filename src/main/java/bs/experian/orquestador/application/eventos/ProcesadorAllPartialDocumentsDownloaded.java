@@ -35,13 +35,12 @@ public class ProcesadorAllPartialDocumentsDownloaded implements EventoProcesador
 	@Override
 	public void procesar(EventoDto evento) {
 		List<DocumentosSolicitudEntity> docs = documentoApplicationService.listatDocumentosTablaActiva(evento.getQueryId());
-		List<DocumentosSolicitudBaseEntity> docsBase = new ArrayList<>(docs);
 		
-		if(hayDocumentosPteProceso(docsBase)) {
+		if(hayDocumentosPteProceso(docs)) {
 			return;
 		}
 		
-		EstadoInterno result = calcularEstadoSolicitudPorEstadoDocumento(docsBase);
+		EstadoInterno result = calcularEstadoSolicitudPorEstadoDocumento(docs);
 		
 
 		evento.getEventData().setEventoFinal(true);
@@ -50,13 +49,13 @@ public class ProcesadorAllPartialDocumentsDownloaded implements EventoProcesador
 		evento.getEventData().getSolicitudActual().setSubEstadoExperian(evento.getEventData().getSubstatus());
 	}
 	
-	public boolean hayDocumentosPteProceso (List<DocumentosSolicitudBaseEntity> docs) {
+	public boolean hayDocumentosPteProceso (List<DocumentosSolicitudEntity> docs) {
 		return  docs.stream().anyMatch(doc ->
         DOC_PTE_DESCARGA.equals(doc.getDocumentPdf())
         || DOC_PTE_CUSTODIA.equals(doc.getDocumentPdf()));
 	}
 	
-	public EstadoInterno calcularEstadoSolicitudPorEstadoDocumento(List<DocumentosSolicitudBaseEntity> docs) {
+	public EstadoInterno calcularEstadoSolicitudPorEstadoDocumento(List<DocumentosSolicitudEntity> docs) {
 		EstadoInterno result = null;
 		
 		boolean hayKo = docs.stream().anyMatch(doc->

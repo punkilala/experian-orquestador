@@ -59,7 +59,6 @@ public class ProcesadorDocumentoRepository {
 	 * Actualizar estado documenton despues del proceso de descarga y custodia
 	 * @param evento
 	 */
-	@Transactional
 	public void actualizarResultDocumentoSolicitud (EventoDto evento) {
 		
 		//obtener el documento de la tabla de solicitudes
@@ -70,31 +69,14 @@ public class ProcesadorDocumentoRepository {
 		
 		//para descarga y custodia doucmentos
 		entity.setFechaUltimaAct(OffsetDateTime.now());
+		entity.setEstadoDocumento(evento.getEventData().getResultDescargaCustodia());
+		entity.setDocumentPdf(evento.getEventData().getPdfEstado());
+		entity.setDocumentJson(evento.getEventData().getJsonEstado());
 		
-		if("DocumentoDescargado".equals(evento.getEventType())) {
-			entity.setEstadoDocumento(evento.getEventData().getSubstatus());
-			entity.setDocumentPdf(evento.getEventData().getPdfEstado());
-		}else {
-			entity.setDocumentPdf(evento.getEventData().getSubstatus());
-		}
-		
-		if ("DESCARGADO".equals(evento.getEventData().getJsonEstado())){
-			//tabla documentos temporales
-			DocumentoPendienteCustodiaEntity entityTpm = documentoPendienteCustodiaRepository.findById(
-						new DocumentoPendienteCustodiaPK(evento.getQueryId(), evento.getEventData().getDocumentCode()))
-					.orElseThrow(()->new  NonRetryableProcessingException("DOCUMENTO NO EXISTE ", "No se encuentra documento %s descargado para solicitud %s"
-							.formatted(evento.getEventData().getDocumentCode(), evento.getQueryId())));
-			
-			entity.setDocumentJson(entityTpm.getJsonDocument());
-		}
 		
 		documentosSolicitudesRespository.save(entity);
 		
-		if( "NO_DESCARGADO".equals(evento.getEventData().getPdfEstado()) || "CustodiaDocumento".equals(evento.getEventType())) {
-			documentoPendienteCustodiaRepository.deleteById(
-					new DocumentoPendienteCustodiaPK(evento.getQueryId(), evento.getEventData().getDocumentCode())
-			);
-		}
+		
 	}
 	/**
 	 * Obtener todos los documentos de la solicitud activa
@@ -114,34 +96,34 @@ public class ProcesadorDocumentoRepository {
 		return documentosSolicitudHistRepository.findByQueryId(queryId);
 	}
 	
-	public void moverDocumentosAHistorico(String queryId) {
-	    List<DocumentosSolicitudEntity> documentos = documentosSolicitudesRespository.findByQueryId(queryId);
-
-	    if (documentos.isEmpty()) {
-	    	//si no hay documentos que mover a hist, no hacer nada
-	        return;
-	    }
-
-	    List<DocumentosSolicitudHistEntity> historicos = documentos.stream()
-	            .map(this::toHistorico)
-	            .toList();
-
-	    documentosSolicitudHistRepository.saveAll(historicos);
-	    documentosSolicitudesRespository.deleteAllInBatch(documentos);
-	}
-	private DocumentosSolicitudHistEntity toHistorico(DocumentosSolicitudEntity doc) {
-	    DocumentosSolicitudHistEntity hist = new DocumentosSolicitudHistEntity();
-
-	    hist.setQueryId(doc.getQueryId());
-	    hist.setDocumentCode(doc.getDocumentCode());
-	    hist.setNotificationId(doc.getNotificationId());
-	    hist.setEstadoDocumento(doc.getEstadoDocumento());
-	    hist.setDocumentJson(doc.getDocumentJson());
-	    hist.setDocumentPdf(doc.getDocumentPdf());
-	    hist.setFechaAlta(doc.getFechaAlta());
-	    hist.setFechaUltimaAct(doc.getFechaUltimaAct());
-	    hist.setFechaCierre(OffsetDateTime.now());
-
-	    return hist;
-	}
+//	public void moverDocumentosAHistorico(String queryId) {
+//	    List<DocumentosSolicitudEntity> documentos = documentosSolicitudesRespository.findByQueryId(queryId);
+//
+//	    if (documentos.isEmpty()) {
+//	    	//si no hay documentos que mover a hist, no hacer nada
+//	        return;
+//	    }
+//
+//	    List<DocumentosSolicitudHistEntity> historicos = documentos.stream()
+//	            .map(this::toHistorico)
+//	            .toList();
+//
+//	    documentosSolicitudHistRepository.saveAll(historicos);
+//	    documentosSolicitudesRespository.deleteAllInBatch(documentos);
+//	}
+//	private DocumentosSolicitudHistEntity toHistorico(DocumentosSolicitudEntity doc) {
+//	    DocumentosSolicitudHistEntity hist = new DocumentosSolicitudHistEntity();
+//
+//	    hist.setQueryId(doc.getQueryId());
+//	    hist.setDocumentCode(doc.getDocumentCode());
+//	    hist.setNotificationId(doc.getNotificationId());
+//	    hist.setEstadoDocumento(doc.getEstadoDocumento());
+//	    hist.setDocumentJson(doc.getDocumentJson());
+//	    hist.setDocumentPdf(doc.getDocumentPdf());
+//	    hist.setFechaAlta(doc.getFechaAlta());
+//	    hist.setFechaUltimaAct(doc.getFechaUltimaAct());
+//	    hist.setFechaCierre(OffsetDateTime.now());
+//
+//	    return hist;
+//	}
 }
