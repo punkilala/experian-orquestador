@@ -3,6 +3,7 @@ package bs.experian.orquestador.application.eventos;
 import static bs.experian.orquestador.domain.constants.ExperianConstants.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,10 +47,19 @@ public class ProcesadorEventDescargaDocumentoResult implements EventoProcesador 
 	private void recalcularEstado (EventoDto evento) {
 		List<DocumentosSolicitudEntity> docs = documentoApplicationService.listatDocumentosTablaActiva(evento.getQueryId());
 		
+		//si es un documento tardio, dicho documento aun no esta actualizado el resultado de descarga/custodia en la bdd
+		docs.stream()
+		    .filter(d -> evento.getEventData().getDocumentCode().equals(d.getDocumentCode()))
+		    .findFirst()
+		    .ifPresent(doc -> {
+		        doc.setEstadoDocumento(evento.getEventData().getResultDescargaCustodia());
+		        doc.setDocumentJson(evento.getEventData().getJsonEstado());
+		        doc.setDocumentPdf(evento.getEventData().getPdfEstado());
+	    });
+		
 		if(procesadorAllPartialDocumentsDownloaded.hayDocumentosPteProceso(docs)) {
 			return;
 		}
-
 		
 		DomainEnum.EstadoInterno result = procesadorAllPartialDocumentsDownloaded.calcularEstadoSolicitudPorEstadoDocumento(docs);
 		
